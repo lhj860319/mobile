@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SJ Mobile Partner Center</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    body { 
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; 
+      background: linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%);
+    }
+    .sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .nav-item.active { 
+      background: linear-gradient(90deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%); 
+      border-right: 3px solid #fff; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .card { 
+      backdrop-filter: blur(10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+    }
+    .loader { 
+      border-top-color: #6366f1; 
+      -webkit-animation: spinner 1s linear infinite; 
+      animation: spinner 1s linear infinite; 
+    }
+    @keyframes spinner { 
+      0% { transform: rotate(0deg); } 
+      100% { transform: rotate(360deg); } 
+    }
+    .gradient-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .gradient-success {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    .gradient-info {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    input:focus, select:focus, textarea:focus {
+      ring-color: #6366f1;
+      border-color: #6366f1;
+    }
+    .status-badge {
+      padding: 0.375rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+  </style>
+</head>
+<body class="text-gray-900 antialiased">
+
+  <div class="flex h-screen overflow-hidden relative">
+    <!-- 사이드바 -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 gradient-primary text-white z-50 sidebar transform -translate-x-full md:translate-x-0 shadow-2xl flex flex-col transition-transform duration-300">
+      <div class="p-6 flex items-center gap-4 border-b border-white/20 shrink-0">
+        <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+           <i data-lucide="smartphone" class="text-indigo-600 w-7 h-7"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-xl tracking-tight">SJ Mobile</h1>
+          <p class="text-xs text-white/70 font-medium">Partner Center</p>
+        </div>
+      </div>
+      <nav class="flex-1 py-4 px-3 space-y-1 overflow-y-auto" id="nav-container"></nav>
+      <div class="p-4 bg-white/10 backdrop-blur-sm text-xs text-white/60 text-center shrink-0 border-t border-white/20">
+        © SJ Networks System
+      </div>
+    </aside>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="flex-1 md:ml-64 h-full overflow-y-auto w-full">
+      <!-- 상단 헤더 (데스크톱) -->
+      <header class="hidden md:flex sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-200 px-8 py-4 items-center justify-between shadow-sm">
+        <div class="flex items-center gap-3">
+          <i data-lucide="home" class="w-5 h-5 text-indigo-600"></i>
+          <span id="page-title" class="font-bold text-lg text-gray-800">대시보드</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button class="p-2 rounded-lg hover:bg-gray-100 transition relative">
+            <i data-lucide="bell" class="w-5 h-5 text-gray-600"></i>
+            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+          </button>
+          <button class="p-2 rounded-lg hover:bg-gray-100 transition" onclick="renderView('my-info')">
+            <i data-lucide="user" class="w-5 h-5 text-gray-600"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- 모바일 헤더 -->
+      <header class="md:hidden sticky top-0 z-40 gradient-primary text-white p-4 flex items-center justify-between shadow-lg">
+         <div class="flex items-center gap-2 font-bold text-lg">
+           <i data-lucide="smartphone" class="w-5 h-5"></i> SJ Mobile
+         </div>
+         <button onclick="toggleSidebar()" class="p-2">
+           <i data-lucide="menu" class="w-6 h-6"></i>
+         </button>
+      </header>
+
+      <div class="p-4 md:p-8 max-w-7xl mx-auto pb-20">
+        <!-- 에러 메시지 -->
+        <div id="error-box" class="hidden bg-red-50 border-l-4 border-red-500 text-red-700 px-6 py-4 rounded-lg mb-6 shadow-sm" role="alert">
+          <div class="flex items-center gap-2">
+            <i data-lucide="alert-circle" class="w-5 h-5"></i>
+            <strong class="font-bold">오류 발생!</strong>
+          </div>
+          <span class="block sm:inline mt-1" id="error-message"></span>
+        </div>
+
+        <!-- 성공 메시지 -->
+        <div id="success-box" class="hidden bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 px-6 py-4 rounded-lg mb-6 shadow-sm" role="alert">
+          <div class="flex items-center gap-2">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            <strong class="font-bold">성공!</strong>
+          </div>
+          <span class="block sm:inline mt-1" id="success-message"></span>
+        </div>
+
+        <!-- 메인 뷰 -->
+        <div id="main-view" class="min-h-[300px]">
+           <div class="flex flex-col justify-center items-center h-64 text-indigo-400">
+              <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+              <p id="loading-text" class="text-gray-500 font-medium">데이터를 불러오는 중입니다...</p>
+           </div>
+        </div>
+      </div>
+    </main>
+    <div id="overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden backdrop-blur-sm"></div>
+  </div>
+
+  <script>
+    const API_BASE_URL = window.location.origin + '/api';
+    
+    let appData = [];
+    let statistics = null;
+    let currentView = 'home';
+
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        renderNav();
+        loadData();
+      } catch (e) {
+        showError('초기화 중 오류: ' + e.message);
+      }
+    });
+
+    async function apiCall(endpoint, options = {}) {
+      try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+          },
+          ...options
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: '알 수 없는 오류가 발생했습니다.' }));
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('API 호출 오류:', error);
+        throw error;
+      }
+    }
+
+    async function loadData() {
+      document.getElementById('loading-text').innerText = '서버 연결 중...';
+      
+      try {
+        [appData, statistics] = await Promise.all([
+          apiCall('/applications'),
+          apiCall('/statistics')
+        ]);
+        renderView(currentView);
+        hideError();
+      } catch (error) {
+        showError('데이터 로드 실패: ' + error.message);
+        appData = [];
+        statistics = null;
+        renderView(currentView);
+      }
+    }
+
+    function showError(msg) {
+      const errBox = document.getElementById('error-box');
+      const errMsg = document.getElementById('error-message');
+      errMsg.innerText = msg;
+      errBox.classList.remove('hidden');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      console.error(msg);
+    }
+
+    function hideError() {
+      document.getElementById('error-box').classList.add('hidden');
+    }
+
+    function showSuccess(msg) {
+      const successBox = document.getElementById('success-box');
+      const successMsg = document.getElementById('success-message');
+      successMsg.innerText = msg;
+      successBox.classList.remove('hidden');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      setTimeout(() => {
+        successBox.classList.add('hidden');
+      }, 3000);
+    }
+
+    function renderNav() {
+      const menuItems = [
+        { id: 'home', icon: 'layout-dashboard', label: '홈 (대시보드)' },
+        { id: 'online-application', icon: 'smartphone', label: '온라인가입신청' },
+        { id: 'application-form', icon: 'file-text', label: '가입/번호이동 신청서' },
+        { id: 'application', icon: 'file-plus', label: '가입 신청서 작성' },
+        { id: 'status', icon: 'list-checks', label: '신청서 현황' },
+        { id: 'online-check', icon: 'search', label: '온라인 가입확인' },
+        { id: 'form-download', icon: 'download', label: '신청서양식 다운로드' },
+        { id: 'settlement', icon: 'calculator', label: '정산 관리' },
+        { id: 'my-info', icon: 'user', label: '나의 정보' }
+      ];
+      const navHtml = menuItems.map(item => `
+        <button onclick="renderView('${item.id}')" id="nav-${item.id}" 
+          class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left mb-1 hover:bg-white/10 text-white/90 font-medium">
+          <i data-lucide="${item.icon}" class="w-5 h-5"></i>
+          <span class="text-sm">${item.label}</span>
+        </button>
+      `).join('');
+      document.getElementById('nav-container').innerHTML = navHtml;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function renderView(viewId) {
+      currentView = viewId;
+      const viewContainer = document.getElementById('main-view');
+      const titleEl = document.getElementById('page-title');
+      
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      const activeNav = document.getElementById(`nav-${viewId}`);
+      if(activeNav) activeNav.classList.add('active');
+
+      if (window.innerWidth < 768) {
+        document.getElementById('sidebar').classList.add('-translate-x-full');
+        document.getElementById('overlay').classList.add('hidden');
+      }
+
+      const titles = {
+        'home': '대시보드',
+        'online-application': '온라인가입신청',
+        'application': '신청서 작성',
+        'application-form': '가입/번호이동 신청서',
+        'status': '접수/개통 현황',
+        'online-check': '온라인 가입확인',
+        'form-download': '신청서양식 다운로드',
+        'settlement': '정산 현황',
+        'my-info': '나의 정보'
+      };
+
+      titleEl.innerText = titles[viewId] || '대시보드';
+
+      if (viewId === 'home') {
+        viewContainer.innerHTML = getHomeHtml();
+      } else if (viewId === 'online-application') {
+        viewContainer.innerHTML = getOnlineApplicationHtml();
+      } else if (viewId === 'application') {
+        viewContainer.innerHTML = getFormHtml();
+      } else if (viewId === 'application-form') {
+        viewContainer.innerHTML = getApplicationFormHtml();
+      } else if (viewId === 'status') {
+        viewContainer.innerHTML = getStatusHtml();
+      } else if (viewId === 'online-check') {
+        viewContainer.innerHTML = getOnlineCheckHtml();
+      } else if (viewId === 'form-download') {
+        viewContainer.innerHTML = getFormDownloadHtml();
+      } else if (viewId === 'settlement') {
+        viewContainer.innerHTML = getSettlementHtml();
+      } else if (viewId === 'my-info') {
+        viewContainer.innerHTML = getMyInfoHtml();
+      }
+      
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function getHomeHtml() {
+      const statusCounts = {
+        waiting: appData.filter(d => d.status === '접수중').length,
+        inProgress: appData.filter(d => d.status === '개통진행중').length,
+        completed: appData.filter(d => d.status === '개통완료').length,
+        onHold: appData.filter(d => d.status === '개통보류').length,
+        cancelled: appData.filter(d => d.status === '개통취소').length,
+        notActivated: appData.filter(d => d.status === '미개통').length
+      };
+      
+      const totalCommission = appData
+        .filter(d => d.status === '개통완료')
+        .reduce((sum, d) => sum + (Number(d.commission) || 0), 0);
+
+      return `
+        <div class="grid gap-6">
+          <!-- 환영 배너 -->
+          <div class="gradient-primary rounded-2xl text-white shadow-xl p-8 md:p-10 relative overflow-hidden">
+            <div class="absolute inset-0 bg-black/10"></div>
+            <div class="relative z-10">
+              <h2 class="text-3xl font-bold mb-3">사장님, 환영합니다!</h2>
+              <p class="text-white/90 mb-6 text-lg">오늘도 좋은 하루 되세요</p>
+              <button onclick="renderView('status')" class="bg-white text-indigo-600 px-8 py-3 rounded-xl font-bold text-sm hover:bg-gray-50 transition shadow-lg">
+                현황 바로가기 →
+              </button>
+            </div>
+          </div>
+
+          <!-- 가입접수 진행상태 -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-xl font-bold text-gray-800">가입접수 진행상태</h3>
+              <button onclick="renderView('status')" class="p-2 rounded-full hover:bg-gray-100 transition">
+                <i data-lucide="arrow-right" class="w-5 h-5 text-gray-600"></i>
+              </button>
+            </div>
+            <div class="grid grid-cols-3 md:grid-cols-6 gap-4">
+              ${getStatusCard('접수중', statusCounts.waiting, 'blue')}
+              ${getStatusCard('개통진행중', statusCounts.inProgress, 'yellow')}
+              ${getStatusCard('개통완료', statusCounts.completed, 'green')}
+              ${getStatusCard('개통보류', statusCounts.onHold, 'orange')}
+              ${getStatusCard('개통취소', statusCounts.cancelled, 'red')}
+              ${getStatusCard('미개통', statusCounts.notActivated, 'gray')}
+            </div>
+          </div>
+
+          <!-- 퀵 메뉴 -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+             ${getQuickMenu('application-form', 'file-text', '가입/번호이동', 'indigo')}
+             ${getQuickMenu('status', 'list-checks', '접수 조회', 'blue')}
+             ${getQuickMenu('online-check', 'search', '온라인 가입확인', 'purple')}
+             ${getQuickMenu('settlement', 'calculator', '정산 내역', 'emerald')}
+          </div>
+
+          <!-- 통계 카드 -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-md card">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-sm text-gray-500 font-medium">전체 접수</p>
+                <i data-lucide="file-text" class="w-5 h-5 text-indigo-500"></i>
+              </div>
+              <p class="text-4xl font-bold text-indigo-600">${appData.length}건</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-md card">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-sm text-gray-500 font-medium">대기중</p>
+                <i data-lucide="clock" class="w-5 h-5 text-blue-500"></i>
+              </div>
+              <p class="text-4xl font-bold text-blue-600">${statusCounts.waiting}건</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-md card">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-sm text-gray-500 font-medium">총 정산금</p>
+                <i data-lucide="dollar-sign" class="w-5 h-5 text-emerald-500"></i>
+              </div>
+              <p class="text-4xl font-bold text-emerald-600">${totalCommission.toLocaleString()}원</p>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function getStatusCard(label, count, color) {
+      const colors = {
+        blue: 'bg-blue-50 text-blue-700 border-blue-200',
+        yellow: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+        green: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        orange: 'bg-orange-50 text-orange-700 border-orange-200',
+        red: 'bg-red-50 text-red-700 border-red-200',
+        gray: 'bg-gray-50 text-gray-700 border-gray-200'
+      };
+      return `
+        <div class="text-center p-4 rounded-xl border-2 ${colors[color]}">
+          <p class="text-2xl font-bold mb-1">${count}</p>
+          <p class="text-xs font-medium">${label}</p>
+        </div>
+      `;
+    }
+
+    function getQuickMenu(view, icon, label, color) {
+       const colors = { 
+         blue: 'bg-blue-50 text-blue-600', 
+         indigo: 'bg-indigo-50 text-indigo-600',
+         purple: 'bg-purple-50 text-purple-600',
+         emerald: 'bg-emerald-50 text-emerald-600'
+       };
+       return `<div onclick="renderView('${view}')" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-md cursor-pointer flex flex-col items-center gap-3 hover:shadow-xl transition card">
+         <div class="w-14 h-14 rounded-xl ${colors[color]} flex items-center justify-center shadow-sm">
+           <i data-lucide="${icon}" class="w-7 h-7"></i>
+         </div>
+         <span class="font-bold text-gray-700 text-sm text-center">${label}</span>
+       </div>`;
+    }
+
+    function getApplicationFormHtml() {
+      return `
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
+          <h3 class="text-2xl font-bold text-gray-800 mb-6">가입/번호이동 신청서</h3>
+          
+          <!-- 결제 방식 선택 -->
+          <div class="mb-6">
+            <label class="block text-sm font-bold text-gray-700 mb-3">결제 방식</label>
+            <div class="flex gap-3">
+              <button onclick="selectPaymentType('postpaid')" id="btn-postpaid" 
+                class="flex-1 py-3 px-6 rounded-xl font-bold transition-all border-2 border-indigo-500 bg-indigo-500 text-white shadow-md">
+                후불
+              </button>
+              <button onclick="selectPaymentType('prepaid')" id="btn-prepaid" 
+                class="flex-1 py-3 px-6 rounded-xl font-bold transition-all border-2 border-gray-300 bg-white text-gray-600 hover:border-gray-400">
+                선불
+              </button>
+            </div>
+          </div>
+
+          <!-- 통신사 선택 -->
+          <div class="mb-6">
+            <label class="block text-sm font-bold text-gray-700 mb-3">통신사 선택</label>
+            <div class="flex flex-wrap gap-3">
+              <button onclick="selectCarrier('all')" id="btn-carrier-all" 
+                class="px-6 py-3 rounded-xl font-bold transition-all border-2 border-indigo-500 bg-indigo-500 text-white shadow-md">
+                전체
+              </button>
+              <button onclick="selectCarrier('kt')" id="btn-carrier-kt" 
+                class="px-6 py-3 rounded-xl font-bold transition-all border-2 border-gray-300 bg-white text-gray-600 hover:border-gray-400">
+                KT
+              </button>
+              <button onclick="selectCarrier('skt')" id="btn-carrier-skt" 
+                class="px-6 py-3 rounded-xl font-bold transition-all border-2 border-gray-300 bg-white text-gray-600 hover:border-gray-400">
+                SKT
+              </button>
+              <button onclick="selectCarrier('lgu')" id="btn-carrier-lgu" 
+                class="px-6 py-3 rounded-xl font-bold transition-all border-2 border-gray-300 bg-white text-gray-600 hover:border-gray-400">
+                LG U+
+              </button>
+            </div>
+          </div>
+
+          <!-- 통신사 카드 그리드 -->
+          <div id="carrier-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            ${getCarrierCard('favorite', 'star', '즐겨찾기', 'yellow')}
+            ${getCarrierCard('uplus-umobile', 'signal', 'U+ U MOBILE', 'purple', 'LGU+')}
+            ${getCarrierCard('sk-7mobile', 'signal', 'SK 7mobile', 'blue', 'SK telecom')}
+            ${getCarrierCard('kt-mmobile', 'signal', 'kt M mobile', 'red', 'kt')}
+            ${getCarrierCard('hello-mobile', 'signal', 'Hello mobile', 'red', 'LGU+')}
+            ${getCarrierCard('kt-skylife', 'signal', 'kt skylife', 'red', 'kt')}
+          </div>
+        </div>`;
+    }
+
+    function getCarrierCard(id, icon, name, color, logo) {
+      const colors = {
+        yellow: 'bg-yellow-50 border-yellow-300',
+        purple: 'bg-purple-50 border-purple-300',
+        blue: 'bg-blue-50 border-blue-300',
+        red: 'bg-red-50 border-red-300'
+      };
+      return `
+        <div onclick="selectCarrierService('${id}')" 
+          class="bg-white p-6 rounded-xl border-2 ${colors[color] || 'bg-gray-50 border-gray-300'} cursor-pointer hover:shadow-lg transition card">
+          ${logo ? `<div class="text-right mb-2"><span class="text-xs font-bold text-gray-500">${logo}</span></div>` : ''}
+          <div class="text-center">
+            <i data-lucide="${icon}" class="w-10 h-10 mx-auto mb-3 text-gray-700"></i>
+            <p class="font-bold text-gray-800">${name}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function selectPaymentType(type) {
+      document.querySelectorAll('[id^="btn-"]').forEach(btn => {
+        if (btn.id.includes('postpaid') || btn.id.includes('prepaid')) {
+          btn.className = btn.className.replace('bg-indigo-500 text-white border-indigo-500', 'bg-white text-gray-600 border-gray-300');
+        }
+      });
+      const btn = document.getElementById(`btn-${type}`);
+      btn.className = btn.className.replace('bg-white text-gray-600 border-gray-300', 'bg-indigo-500 text-white border-indigo-500 shadow-md');
+    }
+
+    function selectCarrier(carrier) {
+      document.querySelectorAll('[id^="btn-carrier-"]').forEach(btn => {
+        btn.className = btn.className.replace('bg-indigo-500 text-white border-indigo-500 shadow-md', 'bg-white text-gray-600 border-gray-300');
+      });
+      const btn = document.getElementById(`btn-carrier-${carrier}`);
+      btn.className = btn.className.replace('bg-white text-gray-600 border-gray-300', 'bg-indigo-500 text-white border-indigo-500 shadow-md');
+    }
+
+    function selectCarrierService(serviceId) {
+      showSuccess(`${serviceId} 서비스를 선택했습니다. 신청서 작성 페이지로 이동합니다.`);
+      setTimeout(() => renderView('application'), 1000);
+    }
+
+    function getFormDownloadHtml() {
+      const forms = [
+        { id: 'uplus-umobile-adult', name: 'U+유모바일 가입신청서 (성인 후불)', carrier: 'U+ U MOBILE', logo: 'LGU+', color: 'purple' },
+        { id: 'uplus-umobile-youth', name: 'U+유모바일 가입신청서 (청소년 후불)', carrier: 'U+ U MOBILE', logo: 'LGU+', color: 'purple' },
+        { id: 'kt-mmobile', name: 'KTM모바일 가입신청서 (후불)', carrier: 'kt M mobile', logo: 'kt', color: 'red' },
+        { id: 'kt-skylife', name: 'KT SkyLife 가입신청서 (후불)', carrier: 'kt skylife', logo: 'kt', color: 'red' },
+        { id: 'sk-7mobile', name: 'SK 7모바일 가입신청서 (후불)', carrier: 'SK 7mobile', logo: 'SK Telecom', color: 'blue' },
+        { id: 'hello-mobile', name: 'LG 헬로비젼 가입신청서 (후불)', carrier: 'Hello mobile', logo: 'LGU+', color: 'red' },
+        { id: 'ins-mobile', name: '인스모바일 가입신청서 (선불)', carrier: 'INS MOBILE', logo: 'LGU+', color: 'blue' }
+      ];
+
+      return `
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
+          <h3 class="text-2xl font-bold text-gray-800 mb-6">신청서양식 다운로드</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${forms.map(form => `
+              <div class="bg-white border-2 border-gray-200 rounded-xl p-5 hover:shadow-lg transition card">
+                <div class="flex items-start justify-between mb-3">
+                  <div class="text-xs font-bold text-gray-500">${form.logo}</div>
+                </div>
+                <div class="mb-4">
+                  <h4 class="font-bold text-gray-800 text-sm leading-tight">${form.carrier}</h4>
+                  <p class="text-xs text-gray-600 mt-2">${form.name}</p>
+                </div>
+                <div class="flex gap-2">
+                  <button onclick="downloadForm('${form.id}')" 
+                    class="flex-1 py-2 px-4 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition">
+                    다운로드
+                  </button>
+                  <button onclick="printForm('${form.id}')" 
+                    class="flex-1 py-2 px-4 bg-gray-100 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-200 transition">
+                    프린트
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+    }
+
+    function downloadForm(formId) {
+      showSuccess('신청서 양식을 다운로드합니다. (실제 구현 시 PDF 파일 다운로드)');
+    }
+
+    function printForm(formId) {
+      window.print();
+    }
+
+    function getMyInfoHtml() {
+      return `
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
+          <h3 class="text-2xl font-bold text-gray-800 mb-6">나의 정보</h3>
+          
+          <!-- 가입신청/고객정보 -->
+          <div class="mb-8">
+            <h4 class="text-lg font-bold text-gray-800 mb-4 pb-2 border-b-2 border-indigo-500">가입신청/고객정보</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">판매점 아이디</label>
+                <input type="text" value="now1106" readonly 
+                  class="w-full p-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">판매점명</label>
+                <input type="text" value="현재텔레콤" readonly 
+                  class="w-full p-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">대표자명</label>
+                <input type="text" value="이현재" readonly 
+                  class="w-full p-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">사업자번호</label>
+                <input type="text" value="1148196221" readonly 
+                  class="w-full p-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">매장 전화</label>
+                <input type="tel" placeholder="전화번호를 입력하세요" 
+                  class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">매장 팩스</label>
+                <input type="tel" placeholder="팩스번호를 입력하세요" 
+                  class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">연락처</label>
+                <input type="tel" value="01076156623" 
+                  class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">이메일</label>
+                <input type="email" value="yprheeson@naver.com" 
+                  class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">매장주소</label>
+                <input type="text" value="경기 성남시 분당구 판교역로 152" 
+                  class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">매장상세주소</label>
+                <input type="text" value="알파돔타워" 
+                  class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">가입일자</label>
+                <input type="text" value="2025. 11. 12. 오후 6:44:23" readonly 
+                  class="w-full p-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">상태</label>
+                <input type="text" value="승인" readonly 
+                  class="w-full p-3 border-2 border-emerald-200 rounded-xl bg-emerald-50 text-emerald-700 font-bold">
+              </div>
+            </div>
+          </div>
+
+          <!-- 비밀번호 변경 -->
+          <div>
+            <h4 class="text-lg font-bold text-gray-800 mb-4 pb-2 border-b-2 border-indigo-500">비밀번호 변경</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">현재 비밀번호</label>
+                <input type="password" placeholder="비밀번호" 
+                  class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">새 비밀번호</label>
+                <input type="password" placeholder="비밀번호" 
+                  class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">새 비밀번호 확인</label>
+                <input type="password" placeholder="비밀번호 확인" 
+                  class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+              </div>
+            </div>
+            <div class="mt-6">
+              <button onclick="saveMyInfo()" 
+                class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition shadow-md">
+                정보 저장
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function saveMyInfo() {
+      showSuccess('정보가 저장되었습니다.');
+    }
+
+    function getFormHtml() {
+      return `
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 max-w-2xl mx-auto p-6 md:p-8">
+          <h3 class="text-2xl font-bold text-gray-800 mb-6">가입 신청서</h3>
+          <form onsubmit="handleSubmit(event)" class="space-y-5">
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">통신사 <span class="text-red-500">*</span></label>
+              <select name="carrier" required 
+                class="w-full p-3 border-2 border-gray-300 rounded-xl bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                <option value="">선택하세요</option>
+                <option value="SK 7mobile">SK 7mobile</option>
+                <option value="KT M mobile">KT M mobile</option>
+                <option value="LG HelloVision">LG HelloVision</option>
+                <option value="U+ U MOBILE">U+ U MOBILE</option>
+              </select>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">고객명 <span class="text-red-500">*</span></label>
+                <input type="text" name="customerName" required 
+                  class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">연락처 <span class="text-red-500">*</span></label>
+                <input type="tel" name="phoneNumber" required placeholder="010-1234-5678" 
+                  class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">요금제</label>
+              <input type="text" name="plan" placeholder="예: 5GX 슈퍼플랜" 
+                class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+            </div>
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">판매점</label>
+              <input type="text" name="storeName" placeholder="판매점명을 입력하세요" 
+                class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+            </div>
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">수수료 (원)</label>
+              <input type="number" name="commission" placeholder="기본값: 50,000원" min="0" 
+                class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+              <p class="text-xs text-gray-500 mt-2">입력하지 않으면 기본값 50,000원이 적용됩니다.</p>
+            </div>
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">비고</label>
+              <textarea name="notes" rows="3" placeholder="추가 정보를 입력하세요" 
+                class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"></textarea>
+            </div>
+            <button type="submit" 
+              class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl mt-6 hover:bg-indigo-700 transition shadow-lg">
+              접수하기
+            </button>
+          </form>
+        </div>`;
+    }
+
+    function getStatusHtml() {
+      if (appData.length === 0) {
+        return `<div class="text-center py-20 bg-white rounded-2xl border border-gray-200 shadow-md">
+          <i data-lucide="inbox" class="w-20 h-20 mx-auto text-gray-300 mb-4"></i>
+          <p class="text-gray-500 font-bold text-lg">데이터 없음</p>
+        </div>`;
+      }
+
+      const rows = appData.map(item => `
+        <tr class="border-b hover:bg-indigo-50/50 transition">
+          <td class="p-4">
+            <span class="status-badge ${
+              item.status === '접수중' ? 'bg-blue-100 text-blue-700' : 
+              item.status === '개통완료' ? 'bg-emerald-100 text-emerald-700' : 
+              item.status === '개통진행중' ? 'bg-yellow-100 text-yellow-700' :
+              'bg-gray-100 text-gray-700'
+            }">${item.status}</span>
+          </td>
+          <td class="p-4 font-bold text-gray-800">${item.customerName}</td>
+          <td class="p-4 text-sm text-gray-600">${item.carrier}</td>
+          <td class="p-4 text-sm text-gray-600">${item.phoneNumber}</td>
+          <td class="p-4 text-sm text-gray-600">${item.plan || '-'}</td>
+          <td class="p-4 text-sm text-gray-600">${item.storeName || '-'}</td>
+          <td class="p-4 text-right font-bold text-emerald-600">${(item.commission || 0).toLocaleString()}원</td>
+          <td class="p-4 text-center">
+            ${item.status === '접수중' ? 
+              `<button onclick="updateStatus('${item.id}','개통완료')" 
+                class="text-xs bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm font-bold">
+                완료처리
+              </button>` : 
+              '-'
+            }
+          </td>
+        </tr>
+      `).join('');
+
+      return `
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          <div class="p-6 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <p class="text-sm text-gray-600 font-medium">총 <span class="font-bold text-indigo-600 text-lg">${appData.length}</span>건</p>
+              <div class="flex gap-2">
+                <select class="px-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-indigo-500">
+                  <option>전체</option>
+                  <option>접수중</option>
+                  <option>개통완료</option>
+                </select>
+                <button class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition">
+                  조회
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-gray-50 text-gray-600 text-sm font-bold border-b">
+                <tr>
+                  <th class="p-4">상태</th>
+                  <th class="p-4">고객명</th>
+                  <th class="p-4">통신사</th>
+                  <th class="p-4">연락처</th>
+                  <th class="p-4">요금제</th>
+                  <th class="p-4">판매점</th>
+                  <th class="p-4 text-right">수수료</th>
+                  <th class="p-4 text-center">관리</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    function getOnlineCheckHtml() {
+      return `
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 max-w-2xl mx-auto p-6 md:p-8">
+          <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <i data-lucide="search" class="w-6 h-6 text-indigo-600"></i>
+            가입 신청서 조회
+          </h3>
+          <form onsubmit="handleSearch(event)" class="space-y-5 mb-6">
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">연락처로 조회</label>
+              <div class="flex gap-3">
+                <input type="tel" name="phoneSearch" placeholder="010-1234-5678" 
+                  class="flex-1 p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                <button type="submit" 
+                  class="bg-indigo-600 text-white font-bold px-8 py-3 rounded-xl hover:bg-indigo-700 transition shadow-md">
+                  조회
+                </button>
+              </div>
+            </div>
+            <div class="text-center text-gray-400 text-sm font-medium">또는</div>
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">고객명으로 조회</label>
+              <div class="flex gap-3">
+                <input type="text" name="nameSearch" placeholder="고객명 입력" 
+                  class="flex-1 p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                <button type="button" onclick="handleNameSearch()" 
+                  class="bg-indigo-600 text-white font-bold px-8 py-3 rounded-xl hover:bg-indigo-700 transition shadow-md">
+                  조회
+                </button>
+              </div>
+            </div>
+          </form>
+          <div id="search-results" class="mt-6"></div>
+        </div>`;
+    }
+
+    function getSettlementHtml() {
+       const completed = appData.filter(i => i.status === '개통완료');
+       const total = completed.reduce((sum, i) => sum + (Number(i.commission) || 0), 0);
+       const waiting = appData.filter(i => i.status === '접수중');
+       const waitingCommission = waiting.reduce((sum, i) => sum + (Number(i.commission) || 0), 0);
+       const thisMonthCommission = statistics ? statistics.thisMonthCommission : 0;
+       const thisMonthCount = statistics ? statistics.thisMonthCount : 0;
+
+       return `
+         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+           <div class="bg-white p-6 rounded-2xl border-l-4 border-emerald-500 shadow-lg card">
+             <p class="text-sm text-gray-500 mb-2 font-medium">총 정산금</p>
+             <h3 class="text-3xl font-bold text-emerald-600 mb-1">${total.toLocaleString()}원</h3>
+             <p class="text-xs text-gray-400 mt-2">완료 건수: ${completed.length}건</p>
+           </div>
+           <div class="bg-white p-6 rounded-2xl border-l-4 border-indigo-500 shadow-lg card">
+             <p class="text-sm text-gray-500 mb-2 font-medium">이번 달 정산금</p>
+             <h3 class="text-3xl font-bold text-indigo-600 mb-1">${thisMonthCommission.toLocaleString()}원</h3>
+             <p class="text-xs text-gray-400 mt-2">이번 달 완료: ${thisMonthCount}건</p>
+           </div>
+           <div class="bg-white p-6 rounded-2xl border-l-4 border-blue-500 shadow-lg card">
+             <p class="text-sm text-gray-500 mb-2 font-medium">대기중 정산 예상</p>
+             <h3 class="text-3xl font-bold text-blue-600 mb-1">${waitingCommission.toLocaleString()}원</h3>
+             <p class="text-xs text-gray-400 mt-2">대기 건수: ${waiting.length}건</p>
+           </div>
+         </div>
+         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+           <h3 class="font-bold text-xl text-gray-800 mb-6">정산 상세 내역</h3>
+           ${completed.length === 0 ? 
+             '<p class="text-center py-10 text-gray-500">완료된 건이 없습니다.</p>' :
+             '<div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-gray-50 text-gray-600 text-sm font-bold border-b"><tr><th class="p-3">고객명</th><th class="p-3">통신사</th><th class="p-3">요금제</th><th class="p-3">판매점</th><th class="p-3 text-right">수수료</th><th class="p-3">완료일</th></tr></thead><tbody>' +
+             completed.map(item => `
+               <tr class="border-b hover:bg-indigo-50/50 transition">
+                 <td class="p-3 font-bold text-gray-800">${item.customerName}</td>
+                 <td class="p-3 text-sm text-gray-600">${item.carrier}</td>
+                 <td class="p-3 text-sm text-gray-600">${item.plan || '-'}</td>
+                 <td class="p-3 text-sm text-gray-600">${item.storeName || '-'}</td>
+                 <td class="p-3 text-right font-bold text-emerald-600">${(item.commission || 0).toLocaleString()}원</td>
+                 <td class="p-3 text-sm text-gray-500">${new Date(item.updatedAt).toLocaleDateString('ko-KR')}</td>
+               </tr>
+             `).join('') +
+             '</tbody></table></div>'
+           }
+         </div>`;
+    }
+
+    function toggleSidebar() {
+       const sidebar = document.getElementById('sidebar');
+       sidebar.classList.toggle('-translate-x-full');
+       document.getElementById('overlay').classList.toggle('hidden');
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      const originalText = btn.innerText;
+      btn.innerText = '처리중...';
+      btn.disabled = true;
+      hideError();
+
+      try {
+        const formData = {
+          carrier: e.target.carrier.value,
+          customerName: e.target.customerName.value,
+          phoneNumber: e.target.phoneNumber.value,
+          plan: e.target.plan.value || null,
+          commission: e.target.commission.value ? parseInt(e.target.commission.value) : 0,
+          storeName: e.target.storeName.value || null,
+          notes: e.target.notes.value || null
+        };
+
+        await apiCall('/applications', {
+          method: 'POST',
+          body: JSON.stringify(formData)
+        });
+
+        showSuccess('신청서가 성공적으로 접수되었습니다.');
+        e.target.reset();
+        await loadData();
+        renderView('home');
+      } catch (error) {
+        showError('접수 실패: ' + error.message);
+      } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    async function updateStatus(id, status) {
+      if(!confirm('처리하시겠습니까?')) return;
+
+      try {
+        await apiCall(`/applications/${id}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status })
+        });
+
+        showSuccess('상태가 업데이트되었습니다.');
+        await loadData();
+        renderView('status');
+      } catch (error) {
+        showError('상태 업데이트 실패: ' + error.message);
+      }
+    }
+
+    async function handleSearch(e) {
+      e.preventDefault();
+      const phoneNumber = e.target.phoneSearch.value.trim();
+      
+      if (!phoneNumber) {
+        showError('연락처를 입력해주세요.');
+        return;
+      }
+
+      await performSearch({ phoneNumber });
+    }
+
+    async function handleNameSearch() {
+      const nameInput = document.querySelector('input[name="nameSearch"]');
+      const customerName = nameInput.value.trim();
+      
+      if (!customerName) {
+        showError('고객명을 입력해주세요.');
+        return;
+      }
+
+      await performSearch({ customerName });
+    }
+
+    async function performSearch(criteria) {
+      const resultsDiv = document.getElementById('search-results');
+      resultsDiv.innerHTML = '<div class="text-center py-4"><div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 mx-auto mb-2"></div><p class="text-gray-500">검색 중...</p></div>';
+      hideError();
+
+      try {
+        const allData = await apiCall('/applications');
+        
+        let results = [];
+        if (criteria.phoneNumber) {
+          const searchPhone = criteria.phoneNumber.replace(/-/g, '');
+          results = allData.filter(item => {
+            const itemPhone = item.phoneNumber.replace(/-/g, '');
+            return itemPhone.includes(searchPhone) || searchPhone.includes(itemPhone);
+          });
+        } else if (criteria.customerName) {
+          results = allData.filter(item => 
+            item.customerName.includes(criteria.customerName) || 
+            criteria.customerName.includes(item.customerName)
+          );
+        }
+
+        if (results.length === 0) {
+          resultsDiv.innerHTML = `
+            <div class="text-center py-10 bg-gray-50 rounded-xl">
+              <i data-lucide="inbox" class="w-16 h-16 mx-auto text-gray-300 mb-4"></i>
+              <p class="text-gray-500 font-bold">검색 결과가 없습니다.</p>
+              <p class="text-sm text-gray-400 mt-2">입력하신 정보로 등록된 신청서를 찾을 수 없습니다.</p>
+            </div>`;
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+          return;
+        }
+
+        const resultsHtml = results.map(item => `
+          <div class="border-2 border-gray-200 rounded-xl p-5 mb-4 hover:shadow-lg transition card bg-white">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="font-bold text-lg text-gray-800">${item.customerName}</h4>
+                <p class="text-sm text-gray-500 mt-1">${item.phoneNumber}</p>
+              </div>
+              <span class="status-badge ${
+                item.status === '접수중' ? 'bg-blue-100 text-blue-700' : 
+                item.status === '개통완료' ? 'bg-emerald-100 text-emerald-700' : 
+                'bg-gray-100 text-gray-700'
+              }">${item.status}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-sm mt-4">
+              <div>
+                <span class="text-gray-500">통신사:</span>
+                <span class="font-bold ml-2 text-gray-800">${item.carrier}</span>
+              </div>
+              <div>
+                <span class="text-gray-500">요금제:</span>
+                <span class="font-bold ml-2 text-gray-800">${item.plan || '-'}</span>
+              </div>
+              <div>
+                <span class="text-gray-500">판매점:</span>
+                <span class="font-bold ml-2 text-gray-800">${item.storeName || '-'}</span>
+              </div>
+              <div>
+                <span class="text-gray-500">수수료:</span>
+                <span class="font-bold ml-2 text-emerald-600">${(item.commission || 0).toLocaleString()}원</span>
+              </div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-gray-100">
+              <div class="flex justify-between text-xs text-gray-400">
+                <span>접수일: ${new Date(item.createdAt).toLocaleDateString('ko-KR')}</span>
+                <span>수정일: ${new Date(item.updatedAt).toLocaleDateString('ko-KR')}</span>
+              </div>
+            </div>
+            ${item.notes ? `
+              <div class="mt-3 pt-3 border-t border-gray-100">
+                <p class="text-xs text-gray-500 mb-1 font-medium">비고:</p>
+                <p class="text-sm text-gray-700">${item.notes}</p>
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+
+        resultsDiv.innerHTML = `
+          <div class="mb-4">
+            <p class="text-sm text-gray-600 font-medium">검색 결과: <span class="font-bold text-indigo-600 text-lg">${results.length}건</span></p>
+          </div>
+          ${resultsHtml}
+        `;
+        
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      } catch (error) {
+        showError('검색 중 오류가 발생했습니다: ' + error.message);
+        resultsDiv.innerHTML = '';
+      }
+    }
+
+    // 온라인가입신청 관련 변수
+    let onlineAppStep = 1;
+    let onlineAppData = {
+      marketingConsent: false,
+      userType: '',
+      joinMethod: '',
+      applicationMethod: '',
+      simType: '',
+      simCardType: '',
+      planCategory: '',
+      selectedPlan: null,
+      identityVerified: false,
+      termsAgreed: false
+    };
+
+    function getOnlineApplicationHtml() {
+      // 마케팅 동의 모달 표시 (첫 방문 시)
+      if (onlineAppStep === 1 && !onlineAppData.marketingConsent) {
+        return getMarketingConsentModal();
+      }
+      
+      return `
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8 max-w-2xl mx-auto">
+          <!-- 진행 단계 표시 -->
+          <div class="mb-6">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-2xl font-bold text-gray-800">가입신청서</h3>
+              <button onclick="closeOnlineApplication()" class="p-2 hover:bg-gray-100 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-600"></i>
+              </button>
+            </div>
+            <div class="flex items-center gap-2 mb-4">
+              <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-indigo-600 rounded-full transition-all duration-300" 
+                     style="width: ${(onlineAppStep / 3) * 100}%"></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full ${onlineAppStep >= 1 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-500'} flex items-center justify-center text-sm font-bold">1</div>
+                <span class="text-xs ${onlineAppStep >= 1 ? 'text-indigo-600 font-bold' : 'text-gray-400'}">가입조건</span>
+                <div class="w-8 h-8 rounded-full ${onlineAppStep >= 2 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-500'} flex items-center justify-center text-sm font-bold">2</div>
+                <span class="text-xs ${onlineAppStep >= 2 ? 'text-indigo-600 font-bold' : 'text-gray-400'}">본인확인</span>
+                <div class="w-8 h-8 rounded-full ${onlineAppStep >= 3 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-500'} flex items-center justify-center text-sm font-bold">3</div>
+                <span class="text-xs ${onlineAppStep >= 3 ? 'text-indigo-600 font-bold' : 'text-gray-400'}">약관동의</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 단계별 컨텐츠 -->
+          <div id="online-app-content">
+            ${getOnlineAppStepContent()}
+          </div>
+        </div>
+      `;
+    }
+
+    function getMarketingConsentModal() {
+      return `
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+            <div class="mb-6">
+              <p class="text-lg font-bold text-gray-800 leading-relaxed">
+                혜택 안내를 위한<br>
+                마케팅 수신 동의(선택 항목)에<br>
+                미동의 시 사은품 및 경품 혜택을<br>
+                받을 수 없습니다.
+              </p>
+            </div>
+            <p class="text-base text-gray-700 mb-8">재동의 하시겠습니까?</p>
+            <div class="flex gap-3">
+              <button onclick="setMarketingConsent(false)" 
+                class="flex-1 py-4 px-6 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition">
+                아니요.<br>동의하지 않을게요.
+              </button>
+              <button onclick="setMarketingConsent(true)" 
+                class="flex-1 py-4 px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg">
+                네. 동의할게요.
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function setMarketingConsent(consent) {
+      onlineAppData.marketingConsent = consent;
+      onlineAppStep = 1;
+      renderView('online-application');
+    }
+
+    function getOnlineAppStepContent() {
+      if (onlineAppStep === 1) {
+        // 가입조건 단계
+        if (!onlineAppData.userType) {
+          return getStep1UserType();
+        } else if (!onlineAppData.joinMethod) {
+          return getStep1JoinMethod();
+        } else if (!onlineAppData.applicationMethod) {
+          return getStep1ApplicationMethod();
+        } else if (onlineAppData.applicationMethod === 'self' && !onlineAppData.simType) {
+          return getStep1SimType();
+        } else if (onlineAppData.simType === 'usim' && !onlineAppData.simCardType) {
+          return getStep1SimCardType();
+        } else if (!onlineAppData.planCategory) {
+          return getStep1PlanCategory();
+        } else if (!onlineAppData.selectedPlan) {
+          return getStep1PlanSelection();
+        } else {
+          return getStep1Summary();
+        }
+      } else if (onlineAppStep === 2) {
+        return getStep2Identity();
+      } else if (onlineAppStep === 3) {
+        return getStep3Terms();
+      }
+      return '';
+    }
+
+    function getStep1UserType() {
+      return `
+        <div>
+          <h4 class="text-xl font-bold text-gray-800 mb-6">가입자 유형을 선택해 주세요.</h4>
+          <div class="space-y-3">
+            <button onclick="selectUserType('adult')" 
+              class="w-full p-6 border-2 border-gray-300 rounded-xl text-left hover:border-indigo-500 hover:bg-indigo-50 transition">
+              <p class="font-bold text-gray-800 text-lg">성인 (2006년 이전 출생)</p>
+            </button>
+            <button onclick="selectUserType('youth')" 
+              class="w-full p-6 border-2 border-gray-300 rounded-xl text-left hover:border-indigo-500 hover:bg-indigo-50 transition">
+              <p class="font-bold text-gray-800 text-lg">청소년 (2006년 이후 출생)</p>
+            </button>
+            <button onclick="selectUserType('foreigner')" 
+              class="w-full p-6 border-2 border-gray-300 rounded-xl text-left hover:border-indigo-500 hover:bg-indigo-50 transition">
+              <p class="font-bold text-gray-800 text-lg">외국인 (2006년 이전 출생)</p>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function getStep1JoinMethod() {
+      return `
+        <div>
+          <h4 class="text-xl font-bold text-gray-800 mb-6">가입 방법을 선택해 주세요.</h4>
+          <div class="space-y-4">
+            <button onclick="selectJoinMethod('port')" 
+              class="w-full p-6 border-2 ${onlineAppData.joinMethod === 'port' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'} rounded-xl text-left hover:border-indigo-500 hover:bg-indigo-50 transition">
+              <p class="font-bold text-gray-800 text-lg mb-2">번호이동</p>
+              <p class="text-sm text-gray-600">쓰던 번호 그대로 U+유모바일로 통신사를 이동</p>
+            </button>
+            <button onclick="selectJoinMethod('new')" 
+              class="w-full p-6 border-2 ${onlineAppData.joinMethod === 'new' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'} rounded-xl text-left hover:border-indigo-500 hover:bg-indigo-50 transition">
+              <p class="font-bold text-gray-800 text-lg mb-2">신규가입</p>
+              <p class="text-sm text-gray-600">새로운 번호로 U+유모바일 신규가입</p>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function getStep1ApplicationMethod() {
+      return `
+        <div>
+          <h4 class="text-xl font-bold text-gray-800 mb-6">신청서 작성 방법을 선택해주세요.</h4>
+          <div class="space-y-4 mb-6">
+            <button onclick="selectApplicationMethod('self')" 
+              class="w-full p-6 border-2 ${onlineAppData.applicationMethod === 'self' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'} rounded-xl text-left hover:border-indigo-500 hover:bg-indigo-50 transition">
+              <p class="font-bold text-gray-800 text-lg mb-2">eSIM/보유유심 셀프개통</p>
+              <p class="text-sm text-gray-600">즉시 가입가능한 eSIM을 추천해요.</p>
+            </button>
+            <button onclick="selectApplicationMethod('purchase')" 
+              class="w-full p-6 border-2 ${onlineAppData.applicationMethod === 'purchase' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'} rounded-xl text-left hover:border-indigo-500 hover:bg-indigo-50 transition">
+              <p class="font-bold text-gray-800 text-lg mb-2">유심 구매 및 가입 신청</p>
+              <p class="text-sm text-gray-600">신청서 작성하면서 유심 구매를 신청할 수 있어요.</p>
+            </button>
+          </div>
+          <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+            <p class="text-sm text-gray-700">
+              <span class="font-bold">• 미성년자, 외국인 고객님은</span> 유심 구매 및 가입 신청으로 가입해 주세요.
+            </p>
+          </div>
+          <div class="mt-6 bg-gray-50 p-4 rounded-xl">
+            <p class="font-bold text-sm text-gray-800 mb-3">셀프개통 안내</p>
+            <p class="text-xs text-gray-600 mb-1">• 번호이동 : 오전10시~오후8시 (일요일, 신정·설·추석 당일 제외)</p>
+            <p class="text-xs text-gray-600">• 신규가입 : 오전8시~오후10시 (요일제한없음)</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function getStep1SimType() {
+      return `
+        <div>
+          <h4 class="text-xl font-bold text-gray-800 mb-4">유심/eSIM을 선택해주세요.</h4>
+          <div class="flex gap-3 mb-6">
+            <button onclick="selectSimType('usim-has')" 
+              class="flex-1 py-4 px-6 border-2 ${onlineAppData.simType === 'usim-has' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'} rounded-xl font-bold hover:border-indigo-500 transition">
+              유심 (카드 있음)
+            </button>
+            <button onclick="selectSimType('usim-no')" 
+              class="flex-1 py-4 px-6 border-2 ${onlineAppData.simType === 'usim-no' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'} rounded-xl font-bold hover:border-indigo-500 transition">
+              유심 (카드 없음)
+            </button>
+            <button onclick="selectSimType('esim')" 
+              class="flex-1 py-4 px-6 border-2 ${onlineAppData.simType === 'esim' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'} rounded-xl font-bold hover:border-indigo-500 transition">
+              eSIM
+            </button>
+          </div>
+          <p class="text-sm text-gray-600 mb-4">원하시는 유심 유형을 선택해주세요.</p>
+          <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+            <p class="text-xs text-gray-700">
+              * 본 가입신청서를 통해 유심카드를 받으시는 경우에는 유심카드 비용이 첫 달 청구서에 청구됩니다.
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    function getStep1SimCardType() {
+      return `
+        <div>
+          <h4 class="text-xl font-bold text-gray-800 mb-4">유심 유형 선택</h4>
+          <div class="flex gap-3 mb-6">
+            <button onclick="selectSimCardType('normal')" 
+              class="flex-1 py-4 px-6 border-2 ${onlineAppData.simCardType === 'normal' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'} rounded-xl font-bold hover:border-indigo-500 transition">
+              일반 유심<br><span class="text-sm font-normal">(6,600원)</span>
+            </button>
+            <button onclick="selectSimCardType('nfc')" 
+              class="flex-1 py-4 px-6 border-2 ${onlineAppData.simCardType === 'nfc' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'} rounded-xl font-bold hover:border-indigo-500 transition">
+              NFC 유심<br><span class="text-sm font-normal">(8,800원)</span>
+            </button>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-xl">
+            <p class="text-xs text-gray-600">
+              * NFC 유심 : 교통카드 등 모바일 NFC 기능 이용 가능
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    function getStep1PlanCategory() {
+      return `
+        <div>
+          <h4 class="text-xl font-bold text-gray-800 mb-6">가입하실 요금제를 선택해 주세요.</h4>
+          <div class="flex gap-2 mb-6 border-b border-gray-200">
+            <button onclick="selectPlanCategory('unlimited')" 
+              class="px-6 py-3 ${onlineAppData.planCategory === 'unlimited' ? 'border-b-2 border-indigo-600 text-indigo-600 font-bold' : 'text-gray-500'}">
+              데이터 무제한
+            </button>
+            <button onclick="selectPlanCategory('basic')" 
+              class="px-6 py-3 ${onlineAppData.planCategory === 'basic' ? 'border-b-2 border-indigo-600 text-indigo-600 font-bold' : 'text-gray-500'}">
+              통화 기본
+            </button>
+            <button onclick="selectPlanCategory('zero')" 
+              class="px-6 py-3 ${onlineAppData.planCategory === 'zero' ? 'border-b-2 border-indigo-600 text-indigo-600 font-bold' : 'text-gray-500'}">
+              데이터 제로/통화 전용
+            </button>
+            <button onclick="selectPlanCategory('value')" 
+              class="px-6 py-3 ${onlineAppData.planCategory === 'value' ? 'border-b-2 border-indigo-600 text-indigo-600 font-bold' : 'text-gray-500'}">
+              데이터 가성비
+            </button>
+            <button onclick="selectPlanCategory('super')" 
+              class="px-6 py-3 ${onlineAppData.planCategory === 'super' ? 'border-b-2 border-indigo-600 text-indigo-600 font-bold' : 'text-gray-500'}">
+              초알뜰 갓성비
+            </button>
+          </div>
+          <div class="space-y-3">
+            ${getPlanList()}
+          </div>
+        </div>
+      `;
+    }
+
+    function getPlanList() {
+      const plans = {
+        'unlimited': [
+          { name: 'LTE 스페셜 플러스', data: '100GB', price: 38200, originalPrice: 46600, speed: '5M bps' }
+        ],
+        'basic': [
+          { name: 'LTE 베이직', data: '50GB', price: 25000, originalPrice: 30000 }
+        ],
+        'zero': [
+          { name: '통화 전용', data: '0GB', price: 15000 }
+        ],
+        'value': [
+          { name: 'LTE 가성비', data: '30GB', price: 20000, originalPrice: 25000 }
+        ],
+        'super': [
+          { name: '초알뜰 플랜', data: '20GB', price: 15000 }
+        ]
+      };
+
+      const categoryPlans = plans[onlineAppData.planCategory] || plans['unlimited'];
+      
+      return categoryPlans.map((plan, index) => `
+        <div onclick="selectPlan(${index})" 
+          class="p-6 border-2 ${onlineAppData.selectedPlan?.name === plan.name ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'} rounded-xl hover:border-indigo-300 cursor-pointer transition">
+          <div class="flex items-center justify-between mb-3">
+            <h5 class="font-bold text-lg text-gray-800">${plan.name}</h5>
+            ${plan.originalPrice ? `
+              <div class="text-right">
+                <p class="text-sm text-gray-400 line-through">${plan.originalPrice.toLocaleString()}원</p>
+                <p class="text-xl font-bold text-indigo-600">${plan.price.toLocaleString()}원</p>
+              </div>
+            ` : `
+              <p class="text-xl font-bold text-indigo-600">${plan.price.toLocaleString()}원</p>
+            `}
+          </div>
+          <div class="flex items-center gap-4 text-sm text-gray-600">
+            <span><i data-lucide="arrow-up-down" class="w-4 h-4 inline"></i> ${plan.data}</span>
+            <span><i data-lucide="phone" class="w-4 h-4 inline"></i> 기본제공</span>
+            <span><i data-lucide="mail" class="w-4 h-4 inline"></i> 기본제공</span>
+          </div>
+          ${plan.speed ? `
+            <p class="text-xs text-gray-500 mt-2">• 최대 ${plan.speed} 속도로 데이터 무제한 이용</p>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    function getStep1PlanSelection() {
+      return getStep1PlanCategory();
+    }
+
+    function getStep1Summary() {
+      return `
+        <div>
+          <h4 class="text-xl font-bold text-gray-800 mb-6">선택하신 내용을 확인해주세요.</h4>
+          <div class="space-y-4 bg-gray-50 p-6 rounded-xl mb-6">
+            <div class="flex justify-between">
+              <span class="text-gray-600">가입자 유형:</span>
+              <span class="font-bold">${onlineAppData.userType === 'adult' ? '성인' : onlineAppData.userType === 'youth' ? '청소년' : '외국인'}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">가입 방법:</span>
+              <span class="font-bold">${onlineAppData.joinMethod === 'port' ? '번호이동' : '신규가입'}</span>
+            </div>
+            ${onlineAppData.selectedPlan ? `
+              <div class="flex justify-between">
+                <span class="text-gray-600">선택 요금제:</span>
+                <span class="font-bold">${onlineAppData.selectedPlan.name} (${onlineAppData.selectedPlan.price.toLocaleString()}원)</span>
+              </div>
+            ` : ''}
+          </div>
+          <button onclick="nextStep()" 
+            class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition shadow-lg">
+            다음
+          </button>
+        </div>
+      `;
+    }
+
+    function getStep2Identity() {
+      return `
+        <div>
+          <h4 class="text-xl font-bold text-gray-800 mb-2">가입자 정보를 입력해 주세요.</h4>
+          <p class="text-sm text-gray-600 mb-6">주민등록증 또는 운전면허증을 준비해 주세요.</p>
+          
+          <div class="bg-gray-100 p-6 rounded-xl mb-6 text-center">
+            <div class="bg-white p-8 rounded-lg inline-block">
+              <p class="text-sm text-gray-500 mb-2">주민등록증</p>
+              <div class="text-left">
+                <p class="font-bold text-gray-800 mb-2">홍길동</p>
+                <p class="text-xs text-gray-600 mb-1">950803-1<span class="bg-red-100 px-2 py-1 rounded">234567</span></p>
+                <p class="text-xs text-gray-600">2022.08.31</p>
+              </div>
+            </div>
+          </div>
+
+          <form onsubmit="handleIdentitySubmit(event)" class="space-y-4">
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">신분증 종류 <span class="text-red-500">*</span></label>
+              <div class="flex gap-3">
+                <button type="button" onclick="selectIdType('resident')" 
+                  class="flex-1 py-3 px-6 border-2 ${onlineAppData.idType === 'resident' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'} rounded-xl font-bold hover:border-indigo-500 transition">
+                  주민등록증
+                </button>
+                <button type="button" onclick="selectIdType('driver')" 
+                  class="flex-1 py-3 px-6 border-2 ${onlineAppData.idType === 'driver' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'} rounded-xl font-bold hover:border-indigo-500 transition">
+                  운전면허증
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">이름 <span class="text-red-500">*</span></label>
+              <input type="text" name="name" required placeholder="2자 이상 한글 입력" 
+                class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+            </div>
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">주민등록번호 <span class="text-red-500">*</span></label>
+              <div class="flex gap-2">
+                <input type="text" name="ssn1" required placeholder="주민번호 앞 6자리" maxlength="6"
+                  class="flex-1 p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                <span class="self-center text-gray-400">-</span>
+                <input type="text" name="ssn2" required placeholder="숫자 7자리" maxlength="7"
+                  class="flex-1 p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">발급일자 <span class="text-red-500">*</span></label>
+              <input type="text" name="issueDate" required placeholder="- 없이 숫자만 입력 예)20180504" maxlength="8"
+                class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+            </div>
+            <button type="submit" 
+              class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition shadow-lg">
+              본인확인
+            </button>
+          </form>
+        </div>
+      `;
+    }
+
+    function getStep3Terms() {
+      return `
+        <div>
+          <h4 class="text-xl font-bold text-gray-800 mb-6">약관 및 이용동의</h4>
+          <div class="bg-gray-50 p-4 rounded-xl mb-4">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" id="all-terms" onchange="toggleAllTerms(this.checked)" 
+                class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+              <span class="font-bold text-gray-800">모든 약관을 확인 후 동의합니다. (선택항목 포함)</span>
+            </label>
+          </div>
+          <div class="space-y-3">
+            <label class="flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-xl cursor-pointer hover:border-indigo-300 transition">
+              <div class="flex items-center gap-3">
+                <input type="checkbox" name="term" value="service" required
+                  class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                <span class="text-gray-800">U+유모바일 서비스 이용약관 (필수)</span>
+              </div>
+              <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i>
+            </label>
+            <label class="flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-xl cursor-pointer hover:border-indigo-300 transition">
+              <div class="flex items-center gap-3">
+                <input type="checkbox" name="term" value="privacy" required
+                  class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                <span class="text-gray-800">개인정보 수집 및 이용 동의 (필수)</span>
+              </div>
+              <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i>
+            </label>
+            <label class="flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-xl cursor-pointer hover:border-indigo-300 transition">
+              <div class="flex items-center gap-3">
+                <input type="checkbox" name="term" value="credit" required
+                  class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                <span class="text-gray-800">개인신용정보 조회 동의 (필수)</span>
+              </div>
+              <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i>
+            </label>
+            <label class="flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-xl cursor-pointer hover:border-indigo-300 transition">
+              <div class="flex items-center gap-3">
+                <input type="checkbox" name="term" value="unique" required
+                  class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                <span class="text-gray-800">고유식별 정보 수집 이용 동의 (필수)</span>
+              </div>
+              <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i>
+            </label>
+          </div>
+          <div class="mt-6 bg-gray-50 p-4 rounded-xl">
+            <button onclick="submitOnlineApplication()" 
+              class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition shadow-lg">
+              동의합니다.
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // 온라인가입신청 관련 함수들
+    function selectUserType(type) {
+      onlineAppData.userType = type;
+      renderView('online-application');
+    }
+
+    function selectJoinMethod(method) {
+      onlineAppData.joinMethod = method;
+      renderView('online-application');
+    }
+
+    function selectApplicationMethod(method) {
+      onlineAppData.applicationMethod = method;
+      renderView('online-application');
+    }
+
+    function selectSimType(type) {
+      onlineAppData.simType = type;
+      renderView('online-application');
+    }
+
+    function selectSimCardType(type) {
+      onlineAppData.simCardType = type;
+      renderView('online-application');
+    }
+
+    function selectPlanCategory(category) {
+      onlineAppData.planCategory = category;
+      onlineAppData.selectedPlan = null;
+      renderView('online-application');
+    }
+
+    function selectPlan(index) {
+      const plans = {
+        'unlimited': [
+          { name: 'LTE 스페셜 플러스', data: '100GB', price: 38200, originalPrice: 46600, speed: '5M bps' }
+        ],
+        'basic': [
+          { name: 'LTE 베이직', data: '50GB', price: 25000, originalPrice: 30000 }
+        ],
+        'zero': [
+          { name: '통화 전용', data: '0GB', price: 15000 }
+        ],
+        'value': [
+          { name: 'LTE 가성비', data: '30GB', price: 20000, originalPrice: 25000 }
+        ],
+        'super': [
+          { name: '초알뜰 플랜', data: '20GB', price: 15000 }
+        ]
+      };
+      const categoryPlans = plans[onlineAppData.planCategory] || plans['unlimited'];
+      onlineAppData.selectedPlan = categoryPlans[index];
+      renderView('online-application');
+    }
+
+    function nextStep() {
+      if (onlineAppStep < 3) {
+        onlineAppStep++;
+        renderView('online-application');
+      }
+    }
+
+    function prevStep() {
+      if (onlineAppStep > 1) {
+        onlineAppStep--;
+        renderView('online-application');
+      }
+    }
+
+    function selectIdType(type) {
+      onlineAppData.idType = type;
+      renderView('online-application');
+    }
+
+    async function handleIdentitySubmit(e) {
+      e.preventDefault();
+      onlineAppData.identityVerified = true;
+      showSuccess('본인확인이 완료되었습니다.');
+      nextStep();
+    }
+
+    function toggleAllTerms(checked) {
+      document.querySelectorAll('input[name="term"]').forEach(cb => cb.checked = checked);
+    }
+
+    async function submitOnlineApplication() {
+      const terms = Array.from(document.querySelectorAll('input[name="term"]:checked'));
+      if (terms.length < 4) {
+        showError('모든 필수 약관에 동의해주세요.');
+        return;
+      }
+
+      try {
+        const formData = {
+          carrier: 'U+ U MOBILE',
+          customerName: '온라인가입',
+          phoneNumber: '010-0000-0000',
+          plan: onlineAppData.selectedPlan?.name || '',
+          commission: 50000,
+          storeName: '온라인',
+          notes: `가입방법: ${onlineAppData.joinMethod === 'port' ? '번호이동' : '신규가입'}, 유형: ${onlineAppData.userType}`
+        };
+
+        await apiCall('/applications', {
+          method: 'POST',
+          body: JSON.stringify(formData)
+        });
+
+        showSuccess('온라인 가입신청이 완료되었습니다!');
+        onlineAppStep = 1;
+        onlineAppData = {
+          marketingConsent: false,
+          userType: '',
+          joinMethod: '',
+          applicationMethod: '',
+          simType: '',
+          simCardType: '',
+          planCategory: '',
+          selectedPlan: null,
+          identityVerified: false,
+          termsAgreed: false
+        };
+        setTimeout(() => renderView('home'), 2000);
+      } catch (error) {
+        showError('가입신청 실패: ' + error.message);
+      }
+    }
+
+    function closeOnlineApplication() {
+      if (confirm('가입신청을 취소하시겠습니까?')) {
+        onlineAppStep = 1;
+        onlineAppData = {
+          marketingConsent: false,
+          userType: '',
+          joinMethod: '',
+          applicationMethod: '',
+          simType: '',
+          simCardType: '',
+          planCategory: '',
+          selectedPlan: null,
+          identityVerified: false,
+          termsAgreed: false
+        };
+        renderView('home');
+      }
+    }
+  </script>
+</body>
+</html>
