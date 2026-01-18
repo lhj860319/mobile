@@ -4,13 +4,24 @@ const fs = require('fs');
 // 환경 변수 확인: PostgreSQL URL이 있으면 PostgreSQL 사용, 없으면 SQLite 사용
 // Vercel 환경에서는 항상 PostgreSQL 사용 (서버리스 환경에서는 SQLite 불가)
 const isVercel = !!process.env.VERCEL;
-const hasPostgresUrl = !!(process.env.POSTGRES_URL || process.env.DATABASE_URL);
+const postgresUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+const hasPostgresUrl = !!postgresUrl;
 const usePostgres = hasPostgresUrl || isVercel;
+
+// 디버깅: 환경 변수 확인
+if (isVercel) {
+  console.log('🔍 환경 변수 확인:');
+  console.log('  - VERCEL:', process.env.VERCEL);
+  console.log('  - POSTGRES_URL:', process.env.POSTGRES_URL ? '설정됨' : '없음');
+  console.log('  - DATABASE_URL:', process.env.DATABASE_URL ? '설정됨' : '없음');
+  console.log('  - hasPostgresUrl:', hasPostgresUrl);
+}
 
 // Vercel 환경에서 DATABASE_URL이 없으면 명확한 오류 표시
 if (isVercel && !hasPostgresUrl) {
   console.error('⚠️ Vercel 환경에서 DATABASE_URL이 설정되지 않았습니다.');
   console.error('Vercel 프로젝트 설정에서 DATABASE_URL 환경 변수를 추가해주세요.');
+  console.error('현재 환경 변수:', Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('POSTGRES')));
   throw new Error('Vercel 환경에서는 DATABASE_URL 환경 변수가 필수입니다. Vercel 프로젝트 설정에서 DATABASE_URL을 추가해주세요.');
 }
 
