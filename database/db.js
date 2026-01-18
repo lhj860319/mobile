@@ -3,12 +3,15 @@ const fs = require('fs');
 
 // 환경 변수 확인: PostgreSQL URL이 있으면 PostgreSQL 사용, 없으면 SQLite 사용
 // Vercel 환경에서는 항상 PostgreSQL 사용 (서버리스 환경에서는 SQLite 불가)
-const usePostgres = !!(process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.VERCEL);
+const isVercel = !!process.env.VERCEL;
+const hasPostgresUrl = !!(process.env.POSTGRES_URL || process.env.DATABASE_URL);
+const usePostgres = hasPostgresUrl || isVercel;
 
 // Vercel 환경에서 DATABASE_URL이 없으면 명확한 오류 표시
-if (process.env.VERCEL && !process.env.POSTGRES_URL && !process.env.DATABASE_URL) {
+if (isVercel && !hasPostgresUrl) {
   console.error('⚠️ Vercel 환경에서 DATABASE_URL이 설정되지 않았습니다.');
   console.error('Vercel 프로젝트 설정에서 DATABASE_URL 환경 변수를 추가해주세요.');
+  throw new Error('Vercel 환경에서는 DATABASE_URL 환경 변수가 필수입니다. Vercel 프로젝트 설정에서 DATABASE_URL을 추가해주세요.');
 }
 
 let db;
@@ -153,21 +156,23 @@ if (usePostgres) {
 
 } else {
   // SQLite 사용 (로컬 개발)
-  // Vercel 환경에서는 SQLite 사용 불가
-  if (process.env.VERCEL) {
+  // Vercel 환경에서는 SQLite 사용 불가 - 이미 위에서 체크했지만 다시 확인
+  if (isVercel) {
     throw new Error('SQLite는 Vercel 서버리스 환경에서 사용할 수 없습니다. DATABASE_URL 환경 변수를 설정해주세요.');
   }
 
   const sqlite3 = require('sqlite3').verbose();
 
   // 데이터 디렉토리 생성 (로컬 개발 환경에서만)
+  // Vercel 환경에서는 절대 실행되지 않아야 함
+  const dataDir = path.join(__dirname, '..', 'data');
   try {
-    const dataDir = path.join(__dirname, '..', 'data');
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
   } catch (err) {
-    console.error('데이터 디렉토리 생성 실패 (로컬 개발 환경이 아닐 수 있음):', err.message);
+    // 로컬 개발 환경이 아닌 경우 (예: 서버리스 환경)
+    console.error('데이터 디렉토리 생성 실패:', err.message);
     throw new Error('SQLite는 로컬 개발 환경에서만 사용할 수 있습니다. DATABASE_URL 환경 변수를 설정해주세요.');
   }
 
