@@ -51,10 +51,11 @@ if (usePostgres) {
   const { Pool } = require('pg');
   
   // 연결 문자열 결정 (환경 변수 또는 임시 하드코딩)
-  // Supabase Direct Connection 형식 사용 (포트 5432) - 이 형식이 정상 작동함
-  // 형식: postgresql://postgres:[비밀번호]@db.kyqkscsaneprzqnznyzf.supabase.co:5432/postgres
+  // 환경 변수가 설정되어 있으면 환경 변수 사용 (Connection Pooling 형식)
+  // 환경 변수가 없으면 Connection Pooling 형식 사용 (Vercel에서 IPv4 호환)
+  // Vercel 환경 변수에 설정된 형식: postgresql://postgres.kyqkscsaneprzqnznyzf:Hyunjae110606@aws-1-ap-south-1.pooler.supabase.com:6543/postgres
   // 비밀번호: Hyunjae110606 (특수문자 없음, URL 인코딩 불필요)
-  const connectionString = postgresUrl || (isVercel ? 'postgresql://postgres:Hyunjae110606@db.kyqkscsaneprzqnznyzf.supabase.co:5432/postgres' : null);
+  const connectionString = postgresUrl || (isVercel ? 'postgresql://postgres.kyqkscsaneprzqnznyzf:Hyunjae110606@aws-1-ap-south-1.pooler.supabase.com:6543/postgres' : null);
   
   if (!connectionString) {
     throw new Error('PostgreSQL 연결 문자열이 설정되지 않았습니다.');
@@ -155,6 +156,12 @@ if (usePostgres) {
       
       isInitialized = true;
     } catch (err) {
+      // PostgreSQL 타입 시스템 오류는 무시 (테이블이 이미 존재하는 경우)
+      if (err.code === '23505' && err.message.includes('pg_type_typname_nsp_index')) {
+        console.log('테이블이 이미 존재합니다. 초기화를 건너뜁니다.');
+        isInitialized = true;
+        return;
+      }
       console.error('테이블 생성 오류:', err.message);
       throw err;
     }
