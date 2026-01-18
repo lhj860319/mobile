@@ -51,12 +51,11 @@ if (usePostgres) {
   const { Pool } = require('pg');
   
   // 연결 문자열 결정 (환경 변수 또는 임시 하드코딩)
-  // Supabase Connection Pooling 형식 사용
-  // 형식 1: postgresql://postgres:[비밀번호]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true
-  // 형식 2: postgresql://postgres.[프로젝트참조]:[비밀번호]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres
-  // 형식 3: postgresql://postgres:[비밀번호]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres
-  // pgbouncer=true 파라미터 추가 시도
-  const connectionString = postgresUrl || (isVercel ? 'postgresql://postgres:Dlguswo86%21%21@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true' : null);
+  // Supabase Direct Connection 형식 사용 (포트 5432)
+  // Supabase에서 확인한 형식: postgres:[비밀번호]@db.kyqkscsaneprzqnznyzf.supabase.co:5432/postgres
+  // 전체 형식: postgresql://postgres:[비밀번호]@db.kyqkscsaneprzqnznyzf.supabase.co:5432/postgres
+  // 비밀번호: Hyunjae110606 (특수문자 없음, URL 인코딩 불필요)
+  const connectionString = postgresUrl || (isVercel ? 'postgresql://postgres:Hyunjae110606@db.kyqkscsaneprzqnznyzf.supabase.co:5432/postgres' : null);
   
   if (!connectionString) {
     throw new Error('PostgreSQL 연결 문자열이 설정되지 않았습니다.');
