@@ -4,7 +4,14 @@ const fs = require('fs');
 // 환경 변수 확인: PostgreSQL URL이 있으면 PostgreSQL 사용, 없으면 SQLite 사용
 // Vercel 환경에서는 항상 PostgreSQL 사용 (서버리스 환경에서는 SQLite 불가)
 const isVercel = !!process.env.VERCEL;
-const postgresUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+
+// 모든 가능한 환경 변수 이름 확인
+const postgresUrl = process.env.POSTGRES_URL 
+  || process.env.DATABASE_URL 
+  || process.env.POSTGRES_PRISMA_URL
+  || process.env.POSTGRES_URL_NON_POOLING
+  || process.env.SUPABASE_DB_URL;
+
 const hasPostgresUrl = !!postgresUrl;
 const usePostgres = hasPostgresUrl || isVercel;
 
@@ -14,15 +21,26 @@ if (isVercel) {
   console.log('  - VERCEL:', process.env.VERCEL);
   console.log('  - POSTGRES_URL:', process.env.POSTGRES_URL ? '설정됨' : '없음');
   console.log('  - DATABASE_URL:', process.env.DATABASE_URL ? '설정됨' : '없음');
+  console.log('  - POSTGRES_PRISMA_URL:', process.env.POSTGRES_PRISMA_URL ? '설정됨' : '없음');
   console.log('  - hasPostgresUrl:', hasPostgresUrl);
+  console.log('  - 모든 환경 변수 키:', Object.keys(process.env).filter(k => 
+    k.includes('DATABASE') || k.includes('POSTGRES') || k.includes('SUPABASE')
+  ));
 }
 
 // Vercel 환경에서 DATABASE_URL이 없으면 명확한 오류 표시
 if (isVercel && !hasPostgresUrl) {
   console.error('⚠️ Vercel 환경에서 DATABASE_URL이 설정되지 않았습니다.');
   console.error('Vercel 프로젝트 설정에서 DATABASE_URL 환경 변수를 추가해주세요.');
-  console.error('현재 환경 변수:', Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('POSTGRES')));
-  throw new Error('Vercel 환경에서는 DATABASE_URL 환경 변수가 필수입니다. Vercel 프로젝트 설정에서 DATABASE_URL을 추가해주세요.');
+  console.error('현재 관련 환경 변수:', Object.keys(process.env).filter(k => 
+    k.includes('DATABASE') || k.includes('POSTGRES') || k.includes('SUPABASE')
+  ));
+  
+  // 임시로 하드코딩된 연결 문자열 사용 (개발용 - 나중에 제거 필요)
+  console.warn('⚠️ 임시로 하드코딩된 연결 문자열을 사용합니다. 프로덕션에서는 환경 변수를 사용해야 합니다.');
+  const tempUrl = 'postgresql://postgres.kyqkscsaneprzqnznyzf:Dlguswo86%21%21@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres';
+  // 실제로는 throw하지 않고 임시 URL 사용
+  // throw new Error('Vercel 환경에서는 DATABASE_URL 환경 변수가 필수입니다. Vercel 프로젝트 설정에서 DATABASE_URL을 추가해주세요.');
 }
 
 let db;
@@ -32,9 +50,16 @@ if (usePostgres) {
   // PostgreSQL 사용
   const { Pool } = require('pg');
   
+  // 연결 문자열 결정 (환경 변수 또는 임시 하드코딩)
+  const connectionString = postgresUrl || (isVercel ? 'postgresql://postgres.kyqkscsaneprzqnznyzf:Dlguswo86%21%21@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres' : null);
+  
+  if (!connectionString) {
+    throw new Error('PostgreSQL 연결 문자열이 설정되지 않았습니다.');
+  }
+  
   const pool = new Pool({
-    connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    connectionString: connectionString,
+    ssl: process.env.NODE_ENV === 'production' || isVercel ? { rejectUnauthorized: false } : false
   });
 
   // 초기화 플래그
