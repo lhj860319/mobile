@@ -51,12 +51,27 @@ class Application {
 
   // 이번 달 완료 건 조회
   static async findCompletedThisMonth() {
-    const sql = `
-      SELECT * FROM applications 
-      WHERE status = '개통완료' 
-      AND strftime('%Y-%m', updated_at) = strftime('%Y-%m', 'now')
-      ORDER BY updated_at DESC
-    `;
+    // PostgreSQL과 SQLite 모두 지원
+    const usePostgres = !!process.env.POSTGRES_URL || !!process.env.DATABASE_URL;
+    
+    let sql;
+    if (usePostgres) {
+      // PostgreSQL: DATE_TRUNC 사용
+      sql = `
+        SELECT * FROM applications 
+        WHERE status = '개통완료' 
+        AND DATE_TRUNC('month', updated_at) = DATE_TRUNC('month', CURRENT_TIMESTAMP)
+        ORDER BY updated_at DESC
+      `;
+    } else {
+      // SQLite: strftime 사용
+      sql = `
+        SELECT * FROM applications 
+        WHERE status = '개통완료' 
+        AND strftime('%Y-%m', updated_at) = strftime('%Y-%m', 'now')
+        ORDER BY updated_at DESC
+      `;
+    }
     const rows = await dbAll(sql);
     return rows.map(row => this.formatRow(row));
   }
