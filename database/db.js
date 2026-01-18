@@ -16,16 +16,9 @@ if (usePostgres) {
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
   });
 
-  // 연결 테스트
-  pool.connect((err, client, release) => {
-    if (err) {
-      console.error('PostgreSQL 연결 오류:', err.message);
-    } else {
-      console.log('PostgreSQL 데이터베이스에 연결되었습니다.');
-      release();
-      initTables();
-    }
-  });
+  // 초기화 플래그
+  let isInitialized = false;
+  let initPromise = null;
 
   db = pool;
 
@@ -38,36 +31,44 @@ if (usePostgres) {
   // Promise 래퍼 함수들 (PostgreSQL)
   dbRun = async (sql, params = []) => {
     try {
+      await ensureInitialized();
       const pgSql = convertSqlToPostgres(sql);
       const result = await pool.query(pgSql, params);
       return { id: result.insertId, changes: result.rowCount };
     } catch (err) {
+      console.error('dbRun 오류:', err);
       throw err;
     }
   };
 
   dbGet = async (sql, params = []) => {
     try {
+      await ensureInitialized();
       const pgSql = convertSqlToPostgres(sql);
       const result = await pool.query(pgSql, params);
       return result.rows[0] || null;
     } catch (err) {
+      console.error('dbGet 오류:', err);
       throw err;
     }
   };
 
   dbAll = async (sql, params = []) => {
     try {
+      await ensureInitialized();
       const pgSql = convertSqlToPostgres(sql);
       const result = await pool.query(pgSql, params);
       return result.rows;
     } catch (err) {
+      console.error('dbAll 오류:', err);
       throw err;
     }
   };
 
-  // 테이블 초기화 (PostgreSQL)
+  // 테이블 초기화 (PostgreSQL) - 지연 초기화
   async function initTables() {
+    if (isInitialized) return;
+    
     try {
       // 가입 신청서 테이블
       await pool.query(`
@@ -102,9 +103,21 @@ if (usePostgres) {
         )
       `);
       console.log('users 테이블이 준비되었습니다.');
+      
+      isInitialized = true;
     } catch (err) {
       console.error('테이블 생성 오류:', err.message);
+      throw err;
     }
+  }
+
+  // 초기화 보장 함수
+  async function ensureInitialized() {
+    if (isInitialized) return;
+    if (initPromise) return initPromise;
+    
+    initPromise = initTables();
+    await initPromise;
   }
 
   async function addMissingColumns() {
