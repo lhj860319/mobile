@@ -18,7 +18,13 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/health",
+      "schedule": "0 */6 * * *"
+    }
+  ]
 }
 
 

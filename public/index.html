@@ -264,6 +264,8 @@
         'home': '대시보드',
         'online-application': '온라인가입신청',
         'application': '신청서 작성',
+        'application-simple': '신청서 작성',
+        'application-formal': '서식에 맞춰 작성하기',
         'application-form': '가입/번호이동 신청서',
         'status': '접수/개통 현황',
         'online-check': '온라인 가입확인',
@@ -279,7 +281,11 @@
       } else if (viewId === 'online-application') {
         viewContainer.innerHTML = getOnlineApplicationHtml();
       } else if (viewId === 'application') {
+        viewContainer.innerHTML = getApplicationSelectionHtml();
+      } else if (viewId === 'application-simple') {
         viewContainer.innerHTML = getFormHtml();
+      } else if (viewId === 'application-formal') {
+        viewContainer.innerHTML = getFormalFormHtml();
       } else if (viewId === 'application-form') {
         viewContainer.innerHTML = getApplicationFormHtml();
       } else if (viewId === 'status') {
@@ -661,10 +667,52 @@
       showSuccess('정보가 저장되었습니다.');
     }
 
+    function getApplicationSelectionHtml() {
+      return `
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 max-w-3xl mx-auto p-6 md:p-8">
+          <h3 class="text-2xl font-bold text-gray-800 mb-8 text-center">가입 신청서 작성 방법 선택</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div onclick="renderView('application-simple')" 
+              class="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl p-8 cursor-pointer hover:shadow-xl transition card">
+              <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <i data-lucide="file-text" class="w-10 h-10 text-white"></i>
+                </div>
+                <h4 class="text-xl font-bold text-gray-800 mb-2">신청서 작성</h4>
+                <p class="text-sm text-gray-600">간단한 신청서 양식으로 빠르게 작성합니다</p>
+              </div>
+              <div class="bg-white/60 rounded-lg p-4 text-sm text-gray-700">
+                <p class="font-bold mb-2">✓ 간편한 입력</p>
+                <p class="text-xs text-gray-600">필수 정보만 입력하여 빠르게 접수</p>
+              </div>
+            </div>
+            <div onclick="renderView('application-formal')" 
+              class="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-2xl p-8 cursor-pointer hover:shadow-xl transition card">
+              <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <i data-lucide="file-check" class="w-10 h-10 text-white"></i>
+                </div>
+                <h4 class="text-xl font-bold text-gray-800 mb-2">서식에 맞춰 작성하기</h4>
+                <p class="text-sm text-gray-600">공식 신청서 양식에 맞춰 상세하게 작성합니다</p>
+              </div>
+              <div class="bg-white/60 rounded-lg p-4 text-sm text-gray-700">
+                <p class="font-bold mb-2">✓ 상세한 정보 입력</p>
+                <p class="text-xs text-gray-600">고객정보, 자동이체, 부가기능 등 모든 항목 포함</p>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
     function getFormHtml() {
       return `
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 max-w-2xl mx-auto p-6 md:p-8">
-          <h3 class="text-2xl font-bold text-gray-800 mb-6">가입 신청서</h3>
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">가입 신청서</h3>
+            <button onclick="renderView('application')" class="text-sm text-gray-600 hover:text-indigo-600 flex items-center gap-2">
+              <i data-lucide="arrow-left" class="w-4 h-4"></i> 선택 화면으로
+            </button>
+          </div>
           <form onsubmit="handleSubmit(event)" class="space-y-5">
             <div>
               <label class="block text-sm font-bold text-gray-700 mb-2">통신사 <span class="text-red-500">*</span></label>
@@ -716,6 +764,487 @@
             </button>
           </form>
         </div>`;
+    }
+
+    function getFormalFormHtml() {
+      return `
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 max-w-4xl mx-auto p-6 md:p-8">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">유모바일(미디어로그) 가입신청서</h3>
+            <button onclick="renderView('application')" class="text-sm text-gray-600 hover:text-indigo-600 flex items-center gap-2">
+              <i data-lucide="arrow-left" class="w-4 h-4"></i> 선택 화면으로
+            </button>
+          </div>
+          <form onsubmit="handleFormalSubmit(event)" class="space-y-8">
+            <!-- 고객구분 -->
+            <div class="border-b-2 border-gray-200 pb-6">
+              <h4 class="text-lg font-bold text-gray-800 mb-4">고객구분</h4>
+              <div class="flex flex-wrap gap-3">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="customerType" value="개인" class="w-4 h-4 text-indigo-600" checked>
+                  <span class="text-gray-700">개인</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="customerType" value="개인사업자" class="w-4 h-4 text-indigo-600">
+                  <span class="text-gray-700">개인사업자</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="customerType" value="외국인" class="w-4 h-4 text-indigo-600">
+                  <span class="text-gray-700">외국인</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="customerType" value="법인" class="w-4 h-4 text-indigo-600">
+                  <span class="text-gray-700">법인</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="customerType" value="복지통신" class="w-4 h-4 text-indigo-600">
+                  <span class="text-gray-700">복지통신</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 요금제 -->
+            <div class="border-b-2 border-gray-200 pb-6">
+              <h4 class="text-lg font-bold text-gray-800 mb-4">요금제</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">요금제 선택 <span class="text-red-500">*</span></label>
+                  <select name="plan" required 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                    <option value="">선택하세요</option>
+                    <option value="5G (31GB+/통화기본)">5G (31GB+/통화기본)</option>
+                    <option value="5G (5GB/통화기본)">5G (5GB/통화기본)</option>
+                    <option value="LTE (1.5GB/통화기본)">LTE (1.5GB/통화기본)</option>
+                    <option value="LTE (10GB+/통화기본)">LTE (10GB+/통화기본)</option>
+                    <option value="LTE (10GB+/통화기본) [약정형]">LTE (10GB+/통화기본) [약정형]</option>
+                    <option value="LTE (15GB+/100분)">LTE (15GB+/100분)</option>
+                    <option value="LTE (15GB+/100분) [약정형]">LTE (15GB+/100분) [약정형]</option>
+                    <option value="LTE (1GB+/100분)">LTE (1GB+/100분)</option>
+                    <option value="LTE (1GB+/통화기본)">LTE (1GB+/통화기본)</option>
+                    <option value="LTE (1GB+/통화기본) [약정형]">LTE (1GB+/통화기본) [약정형]</option>
+                    <option value="LTE (2.5GB+/200분)">LTE (2.5GB+/200분)</option>
+                    <option value="LTE (2.5GB/200분)">LTE (2.5GB/200분)</option>
+                    <option value="LTE (2.5GB/통화기본)">LTE (2.5GB/통화기본)</option>
+                    <option value="LTE (4.5GB+/통화기본)">LTE (4.5GB+/통화기본)</option>
+                    <option value="LTE (5GB+/200분)">LTE (5GB+/200분)</option>
+                    <option value="LTE (6GB+/통화기본)">LTE (6GB+/통화기본)</option>
+                    <option value="LTE (6GB/통화기본)">LTE (6GB/통화기본)</option>
+                    <option value="LTE (7GB+/통화기본)">LTE (7GB+/통화기본)</option>
+                    <option value="LTE (7GB+/통화기본) [약정형]">LTE (7GB+/통화기본) [약정형]</option>
+                    <option value="LTE (9GB/3000분)">LTE (9GB/3000분)</option>
+                    <option value="LTE 스페셜">LTE 스페셜</option>
+                    <option value="LTE 스페셜 [약정형]">LTE 스페셜 [약정형]</option>
+                    <option value="LTE 스페셜 프로">LTE 스페셜 프로</option>
+                    <option value="LTE 스페셜 플러스">LTE 스페셜 플러스</option>
+                    <option value="LTE 스페셜 플러스 [약정형]">LTE 스페셜 플러스 [약정형]</option>
+                    <option value="다성비 (71GB+/통화기본)">다성비 (71GB+/통화기본)</option>
+                    <option value="다성비 (7GB+/통화기본)">다성비 (7GB+/통화기본)</option>
+                    <option value="데이터플러스 (10GB+/통화기본) [약정형]">데이터플러스 (10GB+/통화기본) [약정형]</option>
+                    <option value="데이터플러스 (15GB+/100분)">데이터플러스 (15GB+/100분)</option>
+                    <option value="데이터플러스 (15GB+/100분) [약정형]">데이터플러스 (15GB+/100분) [약정형]</option>
+                    <option value="이동의즐거움 K-패스 (100GB+/통화기본)">이동의즐거움 K-패스 (100GB+/통화기본)</option>
+                    <option value="이동의즐거움 K-패스 (15GB+/통화기본)">이동의즐거움 K-패스 (15GB+/통화기본)</option>
+                    <option value="이동의즐거움 K-패스 (1GB+/통화기본)">이동의즐거움 K-패스 (1GB+/통화기본)</option>
+                    <option value="이동의즐거움 K-패스 (71GB+/통화기본)">이동의즐거움 K-패스 (71GB+/통화기본)</option>
+                    <option value="이동의즐거움 K-패스 (7GB+/통화기본)">이동의즐거움 K-패스 (7GB+/통화기본)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">기본료</label>
+                  <input type="text" name="baseFee" readonly 
+                    class="w-full p-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">할인</label>
+                  <input type="text" name="discount" readonly 
+                    class="w-full p-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">월 청구요금</label>
+                  <input type="text" name="monthlyFee" readonly 
+                    class="w-full p-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-500">
+                </div>
+              </div>
+            </div>
+
+            <!-- 가입비 및 유심정보 -->
+            <div class="border-b-2 border-gray-200 pb-6">
+              <h4 class="text-lg font-bold text-gray-800 mb-4">가입비 및 유심정보</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">모델명</label>
+                  <input type="text" name="modelName" 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">일련번호</label>
+                  <input type="text" name="serialNumber" 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">유심 비용</label>
+                  <select name="simCost" 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                    <option value="없음">없음</option>
+                    <option value="6,600원">6,600원</option>
+                    <option value="8,800원">8,800원</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">가입비</label>
+                  <select name="joinFee" 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                    <option value="없음">없음</option>
+                    <option value="10,000원">10,000원</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 고객정보 -->
+            <div class="border-b-2 border-gray-200 pb-6">
+              <h4 class="text-lg font-bold text-gray-800 mb-4">고객정보</h4>
+              <div class="mb-4">
+                <label class="block text-sm font-bold text-gray-700 mb-3">가입 유형</label>
+                <div class="flex gap-3">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="joinType" value="신규" class="w-4 h-4 text-indigo-600" checked>
+                    <span class="text-gray-700">신규</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="joinType" value="번호이동" class="w-4 h-4 text-indigo-600">
+                    <span class="text-gray-700">번호이동</span>
+                  </label>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">가입자명 <span class="text-red-500">*</span></label>
+                  <input type="text" name="customerName" required 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">생년월일 <span class="text-red-500">*</span></label>
+                  <input type="date" name="birthDate" required 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-bold text-gray-700 mb-2">주소 <span class="text-red-500">*</span></label>
+                  <input type="text" name="address" required 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 mb-2">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-bold text-gray-700 mb-2">상세주소</label>
+                  <input type="text" name="detailAddress" 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">가입자 번호 <span class="text-red-500">*</span></label>
+                  <input type="tel" name="phoneNumber" required placeholder="010-1234-5678" 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">희망번호 (뒷 4자리)</label>
+                  <input type="text" name="desiredNumber" maxlength="4" placeholder="1234" 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                </div>
+                <div id="portNumberSection" class="hidden md:col-span-2">
+                  <label class="block text-sm font-bold text-gray-700 mb-2">번호이동 번호</label>
+                  <input type="tel" name="portNumber" placeholder="010-1234-5678" 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                </div>
+                <div id="previousCarrierSection" class="hidden">
+                  <label class="block text-sm font-bold text-gray-700 mb-2">이전 통신사</label>
+                  <select name="previousCarrier" 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                    <option value="">선택하세요</option>
+                    <option value="SKT">SKT</option>
+                    <option value="KT">KT</option>
+                    <option value="LG U+">LG U+</option>
+                    <option value="MVNO">MVNO</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 자동이체 -->
+            <div class="border-b-2 border-gray-200 pb-6">
+              <h4 class="text-lg font-bold text-gray-800 mb-4">자동이체</h4>
+              <div class="mb-4">
+                <label class="block text-sm font-bold text-gray-700 mb-3">결제 방법</label>
+                <div class="flex gap-3">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="paymentMethod" value="카드" class="w-4 h-4 text-indigo-600" checked>
+                    <span class="text-gray-700">카드</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="paymentMethod" value="계좌" class="w-4 h-4 text-indigo-600">
+                    <span class="text-gray-700">계좌</span>
+                  </label>
+                </div>
+              </div>
+              <div id="cardSection">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">예금주명</label>
+                    <input type="text" name="cardHolder" 
+                      class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">생년월일</label>
+                    <input type="date" name="cardHolderBirth" 
+                      class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">청구주소</label>
+                    <input type="text" name="billingAddress" 
+                      class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 mb-2">
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">상세주소</label>
+                    <input type="text" name="billingDetailAddress" 
+                      class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">카드사명</label>
+                    <select name="cardCompany" 
+                      class="w-full p-3 border-2 border-gray-300 rounded-xl bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                      <option value="">선택하세요</option>
+                      <option value="신한카드">신한카드</option>
+                      <option value="KB국민카드">KB국민카드</option>
+                      <option value="하나카드">하나카드</option>
+                      <option value="삼성카드">삼성카드</option>
+                      <option value="현대카드">현대카드</option>
+                      <option value="롯데카드">롯데카드</option>
+                      <option value="NH농협카드">NH농협카드</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">카드번호</label>
+                    <input type="text" name="cardNumber" placeholder="1234-5678-9012-3456" 
+                      class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">유효기간 (년)</label>
+                    <input type="text" name="cardExpYear" placeholder="2025" maxlength="4" 
+                      class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">유효기간 (월)</label>
+                    <input type="text" name="cardExpMonth" placeholder="12" maxlength="2" 
+                      class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                  </div>
+                </div>
+              </div>
+              <div id="accountSection" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">예금주명</label>
+                    <input type="text" name="accountHolder" 
+                      class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">생년월일</label>
+                    <input type="date" name="accountHolderBirth" 
+                      class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">청구주소</label>
+                    <input type="text" name="accountBillingAddress" 
+                      class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 mb-2">
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">상세주소</label>
+                    <input type="text" name="accountBillingDetailAddress" 
+                      class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">은행명</label>
+                    <select name="bankName" 
+                      class="w-full p-3 border-2 border-gray-300 rounded-xl bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                      <option value="">선택하세요</option>
+                      <option value="KB국민은행">KB국민은행</option>
+                      <option value="신한은행">신한은행</option>
+                      <option value="하나은행">하나은행</option>
+                      <option value="우리은행">우리은행</option>
+                      <option value="NH농협은행">NH농협은행</option>
+                      <option value="IBK기업은행">IBK기업은행</option>
+                      <option value="카카오뱅크">카카오뱅크</option>
+                      <option value="토스뱅크">토스뱅크</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">계좌번호</label>
+                    <input type="text" name="accountNumber" placeholder="123-456-789012" 
+                      class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 부가기능 -->
+            <div class="border-b-2 border-gray-200 pb-6">
+              <h4 class="text-lg font-bold text-gray-800 mb-4">부가기능</h4>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-3">통신과금서비스</label>
+                  <div class="flex gap-3">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="mobilePayment" value="차단" class="w-4 h-4 text-indigo-600" checked>
+                      <span class="text-gray-700">휴대폰결제 차단</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="mobilePayment" value="이용" class="w-4 h-4 text-indigo-600">
+                      <span class="text-gray-700">휴대폰결제 이용</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-3">랜덤결합(데이터 추가지급!!)</label>
+                  <div class="flex gap-3">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="randomCombine" value="동의" class="w-4 h-4 text-indigo-600" checked>
+                      <span class="text-gray-700">동의</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="randomCombine" value="미동의" class="w-4 h-4 text-indigo-600">
+                      <span class="text-gray-700">미동의</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 판매자정보 -->
+            <div class="pb-6">
+              <h4 class="text-lg font-bold text-gray-800 mb-4">판매자정보</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">판매점 상호</label>
+                  <input type="text" name="storeName" 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">판매자명</label>
+                  <input type="text" name="sellerName" 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">연락처</label>
+                  <input type="tel" name="sellerPhone" placeholder="010-1234-5678" 
+                    class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-4 pt-6 border-t-2 border-gray-200">
+              <button type="button" onclick="window.print()" 
+                class="flex-1 bg-gray-100 text-gray-700 font-bold py-4 rounded-xl hover:bg-gray-200 transition shadow-md">
+                출력
+              </button>
+              <button type="button" onclick="downloadFormalForm()" 
+                class="flex-1 bg-gray-100 text-gray-700 font-bold py-4 rounded-xl hover:bg-gray-200 transition shadow-md">
+                다운로드
+              </button>
+              <button type="submit" 
+                class="flex-1 bg-indigo-600 text-white font-bold py-4 rounded-xl hover:bg-indigo-700 transition shadow-lg">
+                접수하기
+              </button>
+            </div>
+          </form>
+        </div>
+        <script>
+          // 번호이동 선택 시 관련 필드 표시
+          document.addEventListener('DOMContentLoaded', function() {
+            const joinTypeInputs = document.querySelectorAll('input[name="joinType"]');
+            const portSection = document.getElementById('portNumberSection');
+            const previousCarrierSection = document.getElementById('previousCarrierSection');
+            
+            joinTypeInputs.forEach(input => {
+              input.addEventListener('change', function() {
+                if (this.value === '번호이동') {
+                  portSection.classList.remove('hidden');
+                  previousCarrierSection.classList.remove('hidden');
+                } else {
+                  portSection.classList.add('hidden');
+                  previousCarrierSection.classList.add('hidden');
+                }
+              });
+            });
+
+            // 결제 방법 선택 시 관련 섹션 표시
+            const paymentMethodInputs = document.querySelectorAll('input[name="paymentMethod"]');
+            const cardSection = document.getElementById('cardSection');
+            const accountSection = document.getElementById('accountSection');
+            
+            paymentMethodInputs.forEach(input => {
+              input.addEventListener('change', function() {
+                if (this.value === '카드') {
+                  cardSection.classList.remove('hidden');
+                  accountSection.classList.add('hidden');
+                } else {
+                  cardSection.classList.add('hidden');
+                  accountSection.classList.remove('hidden');
+                }
+              });
+            });
+          });
+        </script>`;
+    }
+
+    async function handleFormalSubmit(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      const originalText = btn.innerText;
+      btn.innerText = '처리중...';
+      btn.disabled = true;
+      hideError();
+
+      try {
+        const formData = new FormData(e.target);
+        const data = {
+          carrier: 'U+ U MOBILE',
+          customerName: formData.get('customerName'),
+          phoneNumber: formData.get('phoneNumber'),
+          plan: formData.get('plan'),
+          commission: 50000,
+          storeName: formData.get('storeName') || null,
+          notes: JSON.stringify({
+            customerType: formData.get('customerType'),
+            joinType: formData.get('joinType'),
+            birthDate: formData.get('birthDate'),
+            address: formData.get('address'),
+            detailAddress: formData.get('detailAddress'),
+            desiredNumber: formData.get('desiredNumber'),
+            portNumber: formData.get('portNumber'),
+            previousCarrier: formData.get('previousCarrier'),
+            paymentMethod: formData.get('paymentMethod'),
+            mobilePayment: formData.get('mobilePayment'),
+            randomCombine: formData.get('randomCombine'),
+            sellerName: formData.get('sellerName'),
+            sellerPhone: formData.get('sellerPhone')
+          })
+        };
+
+        await apiCall('/applications', {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+
+        showSuccess('신청서가 성공적으로 접수되었습니다.');
+        e.target.reset();
+        await loadData();
+        renderView('home');
+      } catch (error) {
+        showError('접수 실패: ' + error.message);
+      } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    function downloadFormalForm() {
+      showSuccess('신청서 양식을 다운로드합니다. (실제 구현 시 PDF 파일 다운로드)');
     }
 
     function getStatusHtml() {

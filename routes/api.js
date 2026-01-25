@@ -125,5 +125,26 @@ router.get('/statistics', async (req, res) => {
   }
 });
 
+// Health check 엔드포인트 (Supabase 일시중지 방지용)
+router.get('/health', async (req, res) => {
+  try {
+    // 데이터베이스 연결 확인
+    const applications = await Application.findAll();
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+      count: applications.length 
+    });
+  } catch (error) {
+    console.error('Health check 오류:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      timestamp: new Date().toISOString(),
+      error: error.message 
+    });
+  }
+});
+
 module.exports = router;
 
