@@ -1,7 +1,13 @@
 {
   "version": 2,
-  "buildCommand": "npm run build:css",
   "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "public"
+      }
+    },
     {
       "src": "server.js",
       "use": "@vercel/node"
