@@ -289,6 +289,7 @@
         viewContainer.innerHTML = getFormHtml();
       } else if (viewId === 'application-formal') {
         viewContainer.innerHTML = getFormalFormHtml();
+        setTimeout(() => initFormalFormHandlers(), 0);
       } else if (viewId === 'application-form') {
         viewContainer.innerHTML = getApplicationFormHtml();
       } else if (viewId === 'status') {
@@ -1163,44 +1164,7 @@
               </button>
             </div>
           </form>
-        </div>
-        <script>
-          // 번호이동 선택 시 관련 필드 표시
-          document.addEventListener('DOMContentLoaded', function() {
-            const joinTypeInputs = document.querySelectorAll('input[name="joinType"]');
-            const portSection = document.getElementById('portNumberSection');
-            const previousCarrierSection = document.getElementById('previousCarrierSection');
-            
-            joinTypeInputs.forEach(input => {
-              input.addEventListener('change', function() {
-                if (this.value === '번호이동') {
-                  portSection.classList.remove('hidden');
-                  previousCarrierSection.classList.remove('hidden');
-                } else {
-                  portSection.classList.add('hidden');
-                  previousCarrierSection.classList.add('hidden');
-                }
-              });
-            });
-
-            // 결제 방법 선택 시 관련 섹션 표시
-            const paymentMethodInputs = document.querySelectorAll('input[name="paymentMethod"]');
-            const cardSection = document.getElementById('cardSection');
-            const accountSection = document.getElementById('accountSection');
-            
-            paymentMethodInputs.forEach(input => {
-              input.addEventListener('change', function() {
-                if (this.value === '카드') {
-                  cardSection.classList.remove('hidden');
-                  accountSection.classList.add('hidden');
-                } else {
-                  cardSection.classList.add('hidden');
-                  accountSection.classList.remove('hidden');
-                }
-              });
-            });
-          });
-        </script>`;
+        </div>`;
     }
 
     async function handleFormalSubmit(e) {
@@ -1256,6 +1220,50 @@
 
     function downloadFormalForm() {
       showSuccess('신청서 양식을 다운로드합니다. (실제 구현 시 PDF 파일 다운로드)');
+    }
+
+    function initFormalFormHandlers() {
+      // 번호이동 선택 시 관련 필드 표시
+      const joinTypeInputs = document.querySelectorAll('input[name="joinType"]');
+      const portSection = document.getElementById('portNumberSection');
+      const previousCarrierSection = document.getElementById('previousCarrierSection');
+      
+      if (joinTypeInputs.length > 0) {
+        joinTypeInputs.forEach(input => {
+          input.addEventListener('change', function() {
+            if (portSection && previousCarrierSection) {
+              if (this.value === '번호이동') {
+                portSection.classList.remove('hidden');
+                previousCarrierSection.classList.remove('hidden');
+              } else {
+                portSection.classList.add('hidden');
+                previousCarrierSection.classList.add('hidden');
+              }
+            }
+          });
+        });
+      }
+
+      // 결제 방법 선택 시 관련 섹션 표시
+      const paymentMethodInputs = document.querySelectorAll('input[name="paymentMethod"]');
+      const cardSection = document.getElementById('cardSection');
+      const accountSection = document.getElementById('accountSection');
+      
+      if (paymentMethodInputs.length > 0) {
+        paymentMethodInputs.forEach(input => {
+          input.addEventListener('change', function() {
+            if (cardSection && accountSection) {
+              if (this.value === '카드') {
+                cardSection.classList.remove('hidden');
+                accountSection.classList.add('hidden');
+              } else {
+                cardSection.classList.add('hidden');
+                accountSection.classList.remove('hidden');
+              }
+            }
+          });
+        });
+      }
     }
 
     function getStatusHtml() {
