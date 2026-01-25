@@ -161,16 +161,18 @@ router.get('/forms/:formId', (req, res) => {
   try {
     const { formId } = req.params;
     
-    // 폼 ID와 파일명 매핑
+    // 폼 ID와 파일명 매핑 (실제 파일명과 일치)
     const formMapping = {
-      'uplus-umobile-adult': 'U+유모바일 가입신청서 (성인 후불).pdf',
+      'uplus-umobile-adult': 'U+유모바일 가입신청서(성인후불).pdf',
       'uplus-umobile-youth': 'U+유모바일 가입신청서 (청소년 후불).pdf',
-      'kt-mmobile': 'KTM모바일 가입신청서 (후불).pdf',
-      'kt-skylife': 'KT SkyLife 가입신청서 (후불).pdf',
-      'sk-7mobile': 'SK 7모바일 가입신청서 (후불).pdf',
-      'hello-mobile': 'LG 헬로비젼 가입신청서 (후불).pdf',
-      'ins-mobile': '인스모바일 가입신청서 (선불).pdf'
+      'kt-mmobile': 'KTM모바일 가입신청서.pdf',
+      'kt-skylife': 'KT SkyLife 가입신청서.pdf',
+      'sk-7mobile': 'SK 7모바일 가입신청서.pdf',
+      'hello-mobile': 'LG 헬로비젼 가입신청서.pdf',
+      'ins-mobile': '인스모바일 가입신청서.pdf'
     };
+    
+    console.log('PDF 다운로드 요청:', { formId, fileName: formMapping[formId] });
 
     const fileName = formMapping[formId];
     
