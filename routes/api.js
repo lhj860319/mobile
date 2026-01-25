@@ -1,15 +1,25 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
 const Application = require('../models/application');
 
 // 전체 신청서 목록 조회
 router.get('/applications', async (req, res) => {
   try {
+    console.log('📋 신청서 목록 조회 시작');
     const applications = await Application.findAll();
+    console.log(`✅ 신청서 ${applications.length}개 조회 성공`);
     res.json(applications);
   } catch (error) {
-    console.error('신청서 목록 조회 오류:', error);
-    res.status(500).json({ error: '신청서 목록을 불러오는데 실패했습니다.' });
+    console.error('❌ 신청서 목록 조회 오류:', error);
+    console.error('오류 메시지:', error.message);
+    console.error('오류 스택:', error.stack);
+    res.status(500).json({ 
+      error: '신청서 목록을 불러오는데 실패했습니다.',
+      details: process.env.NODE_ENV === 'development' || process.env.VERCEL ? error.message : undefined,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
@@ -143,6 +153,60 @@ router.get('/health', async (req, res) => {
       timestamp: new Date().toISOString(),
       error: error.message 
     });
+  }
+});
+
+// 신청서 양식 PDF 다운로드
+router.get('/forms/:formId', (req, res) => {
+  try {
+    const { formId } = req.params;
+    
+    // 폼 ID와 파일명 매핑
+    const formMapping = {
+      'uplus-umobile-adult': 'U+유모바일 가입신청서 (성인 후불).pdf',
+      'uplus-umobile-youth': 'U+유모바일 가입신청서 (청소년 후불).pdf',
+      'kt-mmobile': 'KTM모바일 가입신청서 (후불).pdf',
+      'kt-skylife': 'KT SkyLife 가입신청서 (후불).pdf',
+      'sk-7mobile': 'SK 7모바일 가입신청서 (후불).pdf',
+      'hello-mobile': 'LG 헬로비젼 가입신청서 (후불).pdf',
+      'ins-mobile': '인스모바일 가입신청서 (선불).pdf'
+    };
+
+    const fileName = formMapping[formId];
+    
+    if (!fileName) {
+      return res.status(404).json({ error: '신청서 양식을 찾을 수 없습니다.' });
+    }
+
+    // PDF 파일 경로
+    const formsDir = path.join(__dirname, '..', 'public', 'forms');
+    const filePath = path.join(formsDir, fileName);
+
+    // 파일 존재 확인
+    if (!fs.existsSync(filePath)) {
+      console.error(`PDF 파일을 찾을 수 없습니다: ${filePath}`);
+      return res.status(404).json({ 
+        error: '신청서 양식 파일을 찾을 수 없습니다.',
+        file: fileName
+      });
+    }
+
+    // 파일 다운로드
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileName)}"`);
+    
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+    
+    fileStream.on('error', (err) => {
+      console.error('파일 읽기 오류:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: '파일을 읽는 중 오류가 발생했습니다.' });
+      }
+    });
+  } catch (error) {
+    console.error('신청서 양식 다운로드 오류:', error);
+    res.status(500).json({ error: '신청서 양식 다운로드에 실패했습니다.' });
   }
 });
 

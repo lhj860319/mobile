@@ -170,10 +170,47 @@ if (usePostgres) {
   // 초기화 보장 함수
   async function ensureInitialized() {
     if (isInitialized) return;
-    if (initPromise) return initPromise;
+    if (initPromise) {
+      await initPromise;
+      return;
+    }
     
     initPromise = initTables();
-    await initPromise;
+    try {
+      await initPromise;
+    } catch (err) {
+      // 초기화 실패 시 promise를 null로 설정하여 재시도 가능하게 함
+      initPromise = null;
+      console.error('데이터베이스 초기화 실패:', err);
+      throw err;
+    }
+  }
+
+  // 연결 테스트 함수
+  async function testConnection() {
+    try {
+      await pool.query('SELECT 1');
+      return true;
+    } catch (err) {
+      console.error('데이터베이스 연결 테스트 실패:', err);
+      return false;
+    }
+  }
+
+  // 공개 초기화 함수 (서버 시작 시 호출)
+  async function initialize() {
+    try {
+      const connected = await testConnection();
+      if (!connected) {
+        throw new Error('데이터베이스 연결에 실패했습니다.');
+      }
+      await ensureInitialized();
+      console.log('✅ 데이터베이스 초기화 완료');
+      return true;
+    } catch (err) {
+      console.error('❌ 데이터베이스 초기화 오류:', err);
+      throw err;
+    }
   }
 
   async function addMissingColumns() {
@@ -346,12 +383,30 @@ if (usePostgres) {
         }
       });
     });
-  };
+  }
+
+  // SQLite 초기화 함수 (Promise 기반)
+  async function initialize() {
+    return new Promise((resolve, reject) => {
+      // SQLite는 연결 시 자동으로 initTables()가 호출되므로
+      // 연결이 성공했는지만 확인하면 됨
+      db.get('SELECT 1', (err) => {
+        if (err) {
+          console.error('SQLite 연결 테스트 실패:', err);
+          reject(err);
+        } else {
+          console.log('✅ SQLite 데이터베이스 초기화 완료');
+          resolve(true);
+        }
+      });
+    });
+  }
 }
 
 module.exports = {
   db,
   dbRun,
   dbGet,
-  dbAll
+  dbAll,
+  initialize
 };

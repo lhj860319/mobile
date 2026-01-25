@@ -554,7 +554,15 @@
     }
 
     function downloadForm(formId) {
-      showSuccess('신청서 양식을 다운로드합니다. (실제 구현 시 PDF 파일 다운로드)');
+      // PDF 파일 다운로드
+      const downloadUrl = `${API_BASE_URL}/forms/${formId}`;
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = '';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showSuccess('신청서 양식을 다운로드합니다.');
     }
 
     function printForm(formId) {
@@ -1581,7 +1589,6 @@
     // 온라인가입신청 관련 변수
     let onlineAppStep = 1;
     let onlineAppData = {
-      marketingConsent: false,
       userType: '',
       joinMethod: '',
       applicationMethod: '',
@@ -1594,11 +1601,6 @@
     };
 
     function getOnlineApplicationHtml() {
-      // 마케팅 동의 모달 표시 (첫 방문 시)
-      if (onlineAppStep === 1 && !onlineAppData.marketingConsent) {
-        return getMarketingConsentModal();
-      }
-      
       return `
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8 max-w-2xl mx-auto">
           <!-- 진행 단계 표시 -->
@@ -2156,7 +2158,6 @@
         showSuccess('온라인 가입신청이 완료되었습니다!');
         onlineAppStep = 1;
         onlineAppData = {
-          marketingConsent: false,
           userType: '',
           joinMethod: '',
           applicationMethod: '',
@@ -2177,7 +2178,6 @@
       if (confirm('가입신청을 취소하시겠습니까?')) {
         onlineAppStep = 1;
         onlineAppData = {
-          marketingConsent: false,
           userType: '',
           joinMethod: '',
           applicationMethod: '',
