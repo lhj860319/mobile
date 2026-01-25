@@ -63,7 +63,10 @@ if (usePostgres) {
   
   const pool = new Pool({
     connectionString: connectionString,
-    ssl: process.env.NODE_ENV === 'production' || isVercel ? { rejectUnauthorized: false } : false
+    ssl: process.env.NODE_ENV === 'production' || isVercel ? { rejectUnauthorized: false } : false,
+    max: 2, // Vercel 서버리스 환경에서는 연결 수를 제한
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000
   });
 
   // 초기화 플래그

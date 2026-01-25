@@ -178,9 +178,11 @@ router.get('/forms/:formId', (req, res) => {
       return res.status(404).json({ error: '신청서 양식을 찾을 수 없습니다.' });
     }
 
-    // PDF 파일 경로
-    const formsDir = path.join(__dirname, '..', 'public', 'forms');
+    // PDF 파일 경로 (Vercel 서버리스 환경에서는 절대 경로 사용)
+    const formsDir = path.join(process.cwd(), 'public', 'forms');
     const filePath = path.join(formsDir, fileName);
+    
+    console.log('PDF 다운로드 요청:', { formId, fileName, filePath, exists: fs.existsSync(filePath) });
 
     // 파일 존재 확인
     if (!fs.existsSync(filePath)) {
