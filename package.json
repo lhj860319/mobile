@@ -9,9 +9,11 @@
   "scripts": {
     "start": "node server.js",
     "dev": "npm run build:css && nodemon server.js",
+    "dev:css": "tailwindcss -i ./src/input.css -o ./public/styles.css --watch",
     "init-db": "node scripts/init-db.js",
     "build": "npm run build:css",
-    "build:css": "tailwindcss -i ./src/input.css -o ./public/styles.css --minify"
+    "build:css": "tailwindcss -i ./src/input.css -o ./public/styles.css --minify",
+    "vercel-build": "npm run build"
   },
   "keywords": ["mobile", "partner", "management"],
   "author": "",
