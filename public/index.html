@@ -1635,39 +1635,6 @@
       `;
     }
 
-    function getMarketingConsentModal() {
-      return `
-        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
-            <div class="mb-6">
-              <p class="text-lg font-bold text-gray-800 leading-relaxed">
-                혜택 안내를 위한<br>
-                마케팅 수신 동의(선택 항목)에<br>
-                미동의 시 사은품 및 경품 혜택을<br>
-                받을 수 없습니다.
-              </p>
-            </div>
-            <p class="text-base text-gray-700 mb-8">재동의 하시겠습니까?</p>
-            <div class="flex gap-3">
-              <button onclick="setMarketingConsent(false)" 
-                class="flex-1 py-4 px-6 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition">
-                아니요.<br>동의하지 않을게요.
-              </button>
-              <button onclick="setMarketingConsent(true)" 
-                class="flex-1 py-4 px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg">
-                네. 동의할게요.
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function setMarketingConsent(consent) {
-      onlineAppData.marketingConsent = consent;
-      onlineAppStep = 1;
-      renderView('online-application');
-    }
 
     function getOnlineAppStepContent() {
       if (onlineAppStep === 1) {
